@@ -15,10 +15,12 @@ import com.charite.enums.Genotype;
 import com.charite.enums.VariantType;
 import com.charite.exception.InvalidFormatException;
 import com.charite.exception.ParserException;
+import com.charite.progress.ProgressListener;
 import com.charite.snv.model.SNV;
 import com.charite.vcf.parser.VCFParser;
 import com.charite.vcf.reader.VCFReader;
 
+//TODO: Test the ProgressListener
 public class VCFParserTest {
 
   private static final List<SNV> vcfList = new ArrayList<SNV>() {
@@ -85,7 +87,23 @@ public class VCFParserTest {
     });
 
     File file = new File("src/test/resources/test.vcf41");
-    parser.parse(file);
+    parser.parse(file, new ProgressListener() { 
+      @Override
+      public void start(String uid, long dataSize) {
+      }
+      
+      @Override
+      public void progress(String uid, int percent, long seconds, long currentDataSize) {
+      }
+      
+      @Override
+      public void failed(String uid, String message) {
+      }
+      
+      @Override
+      public void end(String uid) {
+      }
+    });
     
     assertEquals(idx.get(), vcfList.size());
     assertTrue(functionCalled[0]);
@@ -113,7 +131,23 @@ public class VCFParserTest {
     
     File file = new File("src/test/resources/test.vcf4");
     try {
-      parser.parse(file);
+      parser.parse(file, new ProgressListener() {
+        @Override
+        public void start(String uid, long dataSize) {
+        }
+        
+        @Override
+        public void progress(String uid, int percent, long seconds, long currentDataSize) {
+        }
+        
+        @Override
+        public void failed(String uid, String message) {
+        }
+        
+        @Override
+        public void end(String uid) {
+        }
+      });
     }
     catch (FileNotFoundException e) {
       doesNotExists = true;
@@ -156,7 +190,23 @@ public class VCFParserTest {
     
     File file = new File("src/test/resources/empty.txt");
     try {
-      parser.parse(file);
+      parser.parse(file, new ProgressListener() {
+        @Override
+        public void start(String uid, long dataSize) {
+        }
+        
+        @Override
+        public void progress(String uid, int percent, long seconds, long currentDataSize) {
+        }
+        
+        @Override
+        public void failed(String uid, String message) {
+        }
+        
+        @Override
+        public void end(String uid) {
+        }
+      });
     }
     catch (InvalidFormatException e) {
       emptyFile = true;

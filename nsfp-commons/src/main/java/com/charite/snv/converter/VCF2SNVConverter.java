@@ -14,6 +14,7 @@ import com.charite.esp.dao.ESPDao;
 import com.charite.exception.InvalidFormatException;
 import com.charite.model.ChromosomeId;
 import com.charite.nsfp.dao.NSFPDao;
+import com.charite.progress.ProgressListener;
 import com.charite.snv.model.SNV;
 import com.charite.vcf.parser.VCFParser;
 import com.charite.vcf.reader.VCFReader;
@@ -24,6 +25,9 @@ public final class VCF2SNVConverter implements VCFReader {
   private final List<SNV> snvs = new ArrayList<SNV>();
   private Lock lock            = new ReentrantLock();
 
+  @Autowired
+  private ProgressListener progressListener;
+  
   @Autowired
   private ESPDao espDao;
   
@@ -76,7 +80,7 @@ public final class VCF2SNVConverter implements VCFReader {
     VCFParser parser = new VCFParser(this);
 
     try {
-      parser.parse(vcfFile);
+      parser.parse(vcfFile, progressListener);
     }
     catch (FileNotFoundException e) {
       // TODO Auto-generated catch block

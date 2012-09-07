@@ -2,18 +2,23 @@ package com.charite.vcf.parser;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
+
+import org.apache.commons.io.input.CountingInputStream;
 
 import com.charite.enums.Genotype;
 import com.charite.enums.VariantType;
 import com.charite.exception.InvalidFormatException;
 import com.charite.exception.ParserException;
+import com.charite.progress.ProgressListener;
 import com.charite.snv.model.SNV;
 import com.charite.vcf.reader.VCFReader;
 
@@ -156,14 +161,13 @@ public final class VCFParser {
     }
   }
 
-  public void parse(File file) throws FileNotFoundException, IOException, InvalidFormatException {
+  public void parse(File file, ProgressListener progress) throws FileNotFoundException, IOException, InvalidFormatException {
     if (!file.exists())
       throw new FileNotFoundException("File does not exists: " + file.getAbsolutePath());
    
-    final FileReader fileReader = new FileReader(file);
-    final BufferedReader reader = new BufferedReader(fileReader);
-
-    
+    final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
+    final BufferedReader reader = new BufferedReader(new InputStreamReader(cntIs));
+  
     final List<String> rawHeader = new ArrayList<String>();
     try {
       String line;
@@ -189,6 +193,13 @@ public final class VCFParser {
         throw new InvalidFormatException("Header does not contain all necessary fields");
 
       this.reader.setUp(version);
+      
+      long length = file.length();
+      progress.start(file.getAbsolutePath(), length);
+      
+      long stime = (new Date()).getTime();
+      long seconds = 0;
+      int percent  = -1;
       while ((line = reader.readLine()) != null) {
         if (line.isEmpty() || line.startsWith("#"))
           continue;
@@ -210,11 +221,25 @@ public final class VCFParser {
         final String  sample   = (format != null && elements.length >= header.get(FORMAT) + 1) ? elements[header.get(FORMAT) + 1] : null;
             
         readElement(chromosome, position, ref, alt, info, format, sample);
+        
+        float readLength = cntIs.getByteCount();
+        int newPercent = (int) ((readLength / length) * 100);
+        
+        long diff = (new Date()).getTime() - stime;            
+        long elapsedSeconds = diff / 1000;
+
+        if (percent != newPercent || seconds < elapsedSeconds) {
+          seconds = elapsedSeconds;
+          percent = newPercent;
+          progress.progress(file.getAbsolutePath(), percent, seconds, (long) readLength);
+        }
       }
+      
+      progress.start(file.getAbsolutePath(), length);
     }
     finally {
+      progress.end(file.getAbsolutePath());
       reader.close();
-      fileReader.close();
       this.reader.end(rawHeader);
     }    
   }
