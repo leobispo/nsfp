@@ -1,0 +1,50 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/aop
+                        http://www.springframework.org/schema/aop/spring-aop.xsd
+                        http://www.springframework.org/schema/tx
+                        http://www.springframework.org/schema/tx/spring-tx.xsd">
+	<bean id="ESPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
+		<property name="fileNameRegex">
+			<value>ESP6500\.chr\w+\.snps.txt</value>
+		</property>
+		<property name="downloadUrl">
+			<value>${database.esp.url}</value>
+		</property>
+		<property name="databaseDao">
+			<ref local="ESPDao" />
+		</property>
+		<property name="converter">
+			<ref local="ESPConverter" />
+		</property>
+	</bean>
+
+	<!-- TODO: CHANGE ME - Just for tests -->
+    <bean id="NSFPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
+		<property name="fileNameRegex">
+			<value>ESP6500\.chr\w+\.snps.txt</value>
+		</property>
+		<property name="downloadUrl">
+			<value>${database.nsfp.url}</value>
+		</property>
+		<property name="databaseDao">
+			<ref local="ESPDao" />
+		</property>
+		<property name="converter">
+			<ref local="ESPConverter" />
+		</property>
+	</bean>
+	
+	<bean id="ESPDao" class="com.charite.esp.dao.ESPDaoImpl" />
+
+	<bean id="DownloadManager" class="com.charite.download.DownloadManager"
+		scope="singleton">
+		<constructor-arg>
+			<value>5</value>
+		</constructor-arg>
+	</bean>
+</beans>
