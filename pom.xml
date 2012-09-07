@@ -7,8 +7,6 @@
   <packaging>pom</packaging>
   <name>nsfp</name>
   <modules>
-    <module>esp2sql</module>
-    <module>nsfp2sql</module>
     <module>nsfpalizer</module>
     <module>nsfp-commons</module>
   </modules>
