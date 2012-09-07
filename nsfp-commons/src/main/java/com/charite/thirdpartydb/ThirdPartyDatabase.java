@@ -33,9 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.charite.download.DownloadListener;
 import com.charite.download.DownloadManager;
 import com.charite.exception.DownloadException;
+import com.charite.progress.ProgressListener;
 import com.charite.thirdpartydb.dao.ThirdPartyDatabaseDao;
 
 /**
@@ -57,7 +57,7 @@ public final class ThirdPartyDatabase {
   private DownloadManager<ThirdPartyDatabase> manager = null;
   
   @Autowired
-  private DownloadListener listener = null;
+  private ProgressListener listener = null;
   
   private ThirdPartyConverter converter = null;
   

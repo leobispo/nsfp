@@ -3,7 +3,6 @@ package com.charite.nsfp;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -18,10 +17,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
-import com.charite.download.DownloadListener;
+import com.charite.progress.ProgressListener;
 import com.charite.thirdpartydb.ThirdPartyDatabaseManager;
 
-final class NSFPAlizerDownloadListener implements DownloadListener {
+final class NSFPAlizerDownloadListener implements ProgressListener {
   private final List<Download> downloads = new ArrayList<Download>()
       ;
   private class Download {
@@ -55,17 +54,17 @@ final class NSFPAlizerDownloadListener implements DownloadListener {
   }
 
   @Override
-  public synchronized void start(URL url, long fileSize) {
-    downloads.add(new Download(url.toString(), fileSize));
+  public synchronized void start(final String uid, final long fileSize) {
+    downloads.add(new Download(uid, fileSize));
     System.out.println("");
     System.out.println("");
   }
 
   @Override
-  public synchronized void progress(URL url, int percent, long seconds) {
+  public synchronized void progress(final String uid, final int percent, final long seconds, final long completed) {
     System.out.print("\33[" + downloads.size() * 2 + "A");
     for (Download d : downloads) {
-      if (url.toString().equals(d.url)) {
+      if (uid.equals(d.url)) {
         d.percent = percent;
         d.seconds = seconds;
       }
@@ -75,13 +74,18 @@ final class NSFPAlizerDownloadListener implements DownloadListener {
   }
 
   @Override
-  public synchronized void failed(String message) {
+  public synchronized void failed(final String uid, final String message) {
+  }
+
+  @Override
+  public void end(final String uid) {
+    // TODO Auto-generated method stub
+    
   }
 
 }
 
 public class NSFPAlizer {
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
 
 

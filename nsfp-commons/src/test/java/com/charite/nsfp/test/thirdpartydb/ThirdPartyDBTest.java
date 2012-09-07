@@ -14,26 +14,29 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
-import com.charite.download.DownloadListener;
 import com.charite.esp.dao.ESPDao;
 import com.charite.esp.model.ESP;
 import com.charite.model.ChromosomeId;
+import com.charite.progress.ProgressListener;
 import com.charite.thirdpartydb.ThirdPartyDatabaseManager;
 
-class ThirdPartyTestDownloadListener implements DownloadListener{
+class ThirdPartyTestDownloadListener implements ProgressListener{
 
   @Override
-  public void start(URL url, long fileSize) {
+  public void start(final String uid, final long fileSize) {
   }
 
   @Override
-  public void progress(URL url, int percent, long seconds) {
+  public void progress(final String uid, final int percent, final long seconds, final long downloadedSize) {
   }
 
   @Override
-  public void failed(String message) {
+  public void failed(final String uid, final String message) {
   }
-  
+
+  @Override
+  public void end(String uid) {
+  }
 }
 
 public class ThirdPartyDBTest {

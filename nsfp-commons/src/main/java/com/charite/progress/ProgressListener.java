@@ -15,42 +15,53 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package com.charite.download;
+package com.charite.progress;
 
-import java.net.URL;
 
 /**
- * This interface will be responsible to manage the state of one or more downloads. Whenever a new download is started, 
+ * This interface will be responsible to manage the progress of several data. Whenever a new class has a progress started, 
  * the start method will be called. For each second or percent update, the progress method will be called. If for some 
- * reason the download is failed, the failed method will be called with the error message.
+ * reason the download failed, the failed method will be called with the error message. If the class finished the the progress,
+ * the end method will be called.
  * 
  * @author Leonardo Bispo de Oliveira
  *
  */
-public interface DownloadListener {
+public interface ProgressListener {
   /**
-   * Called when a new download is started.
+   * Called when a new class with progress behavior is started.
    * 
-   * @param url Download URL.
+   * @param uid Unique identifier.
    * @param fileSize Size of the file to download.
+   * @param dataSize Total of data to be processed.
    * 
    */
-  void start(final URL url, final long fileSize);
+  void start(final String uid, final long dataSize);
   
   /**
    * Called when a second is changed or a percent is update.
    * 
-   * @param url Download URL.
+   * @param uid Unique identifier.
    * @param percent Percents completed.
    * @param seconds Elapsed time in seconds.
+   * @param currentDataSize How many information is already processed.
    * 
    */
-  void progress(final URL url, final int percent, final long seconds);
+  void progress(final String uid, final int percent, final long seconds, final long currentDataSize);
   
   /**
-   * Called when a download error occur.
+   * Called when an error occur.
    * 
+   * @param uid Unique identifier.
    * @param message Error message.
    */
-  void failed(final String message);
+  void failed(final String uid, final String message);
+  
+  /**
+   * Called when the class finish the process.
+   * 
+   * @param uid Unique identifier.
+   * 
+   */
+  void end(final String uid);
 }

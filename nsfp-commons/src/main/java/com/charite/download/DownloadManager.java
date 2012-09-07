@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.charite.exception.DownloadException;
+import com.charite.progress.ProgressListener;
 
 /**
  * Manage a set of file downloads. This class implements a Future concept, where non blocking tasks are enqueued 
@@ -81,7 +82,7 @@ public final class DownloadManager<T> {
    * @param data A generic information to be retrieved by this class.
    * @param listener The Download listener implementation.
    */
-  public void enqueueURL(final URL url, final String downloadPath, final T data, final DownloadListener listener) {
+  public void enqueueURL(final URL url, final String downloadPath, final T data, final ProgressListener listener) {
     future.get().listeners.add(new DownloadElement(url, downloadPath, listener, data));
   }
   
@@ -158,9 +159,9 @@ public final class DownloadManager<T> {
     private final URL url;
     private final T data;
     private final String downloadPath;
-    private final DownloadListener listener;
+    private final ProgressListener listener;
 
-    public DownloadElement(final URL url, final String downloadPath, final DownloadListener listener, final T data) {
+    public DownloadElement(final URL url, final String downloadPath, final ProgressListener listener, final T data) {
       this.url          = url;
       this.downloadPath = downloadPath;
       this.listener     = listener;
@@ -223,7 +224,7 @@ public final class DownloadManager<T> {
           
           float readLength = 0;
           
-          listener.start(url, length);
+          listener.start(url.toString(), length);
           while ((read = is.read(buffer)) > 0) {
             fos.write(buffer, 0, read);
             readLength += read;
@@ -235,15 +236,16 @@ public final class DownloadManager<T> {
             if (percent != newPercent || seconds < elapsedSeconds) {
               seconds = elapsedSeconds;
               percent = newPercent;
-              listener.progress(url, percent, seconds);
+              listener.progress(url.toString(), percent, seconds, (long) readLength);
             }
           }
 
           fos.close();
           is.close();
+          listener.end(url.toString());
         }  
       } catch (IOException e) {
-        listener.failed(e.getMessage());
+        listener.failed(url.toString(), e.getMessage());
         parent.setError(true);
         error = true;
         if (file != null)

@@ -17,10 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
 import com.charite.download.DownloadFuture;
-import com.charite.download.DownloadListener;
 import com.charite.download.DownloadManager;
 import com.charite.download.DownloadResult;
 import com.charite.exception.DownloadException;
+import com.charite.progress.ProgressListener;
 
 public class DownloadTest {
   private static byte[] createChecksum(File file) throws Exception {
@@ -62,18 +62,21 @@ public class DownloadTest {
     url = file.toURI().toURL();
     assertNotNull(url);
     
-    manager.enqueueURL(url, "/tmp", this, new DownloadListener() {
-      
+    manager.enqueueURL(url, "/tmp", this, new ProgressListener() {
       @Override
-      public void start(URL url, long fileSize) {
+      public void start(final String uid, final long fileSize) {
       }
       
       @Override
-      public void progress(URL url, int percent, long seconds) {
+      public void progress(final String uid, final int percent, final long seconds, final long downloadedSize) {
       }
       
       @Override
-      public void failed(String message) {
+      public void failed(final String uid, final String message) {
+      }
+
+      @Override
+      public void end(String uid) {
       }
     });
     
@@ -111,18 +114,21 @@ public class DownloadTest {
       url = file.toURI().toURL();
       assertNotNull(url);
     
-      manager.enqueueURL(url, "/tmp", this, new DownloadListener() {
-      
+      manager.enqueueURL(url, "/tmp", this, new ProgressListener() {
         @Override
-        public void start(URL url, long fileSize) {
+        public void start(final String uid, final long fileSize) {
         }
-      
+        
         @Override
-        public void progress(URL url, int percent, long seconds) {
+        public void progress(final String uid, final int percent, final long seconds, final long downloadedSize) {
         }
-      
+        
         @Override
-        public void failed(String message) {
+        public void failed(final String uid, final String message) {
+        }
+
+        @Override
+        public void end(String uid) {
         }
       });
     }
@@ -160,10 +166,10 @@ public class DownloadTest {
       url = file.toURI().toURL();
       assertNotNull(url);
     
-      manager.enqueueURL(url, "/tmp", this, new DownloadListener() {
+      manager.enqueueURL(url, "/tmp", this, new ProgressListener() {
         int myIdx = idx.getAndIncrement();  
         @Override
-        public void start(URL url, long fileSize) {
+        public void start(final String uid, final long fileSize) {
           try {
             if (myIdx == 0)
               Thread.sleep(2000);
@@ -175,13 +181,17 @@ public class DownloadTest {
         }
       
         @Override
-        public void progress(URL url, int percent, long seconds) {
+        public void progress(final String uid, final int percent, final long seconds, final long downloadedSize) {
           if (percent == 100)
             execution[ai.getAndIncrement()] = myIdx;
         }
       
         @Override
-        public void failed(String message) {
+        public void failed(final String uid, final String message) {
+        }
+
+        @Override
+        public void end(String uid) {
         }
       });
     }
@@ -255,19 +265,22 @@ public class DownloadTest {
     final boolean failedCalled[] = new boolean[1];
     
     failedCalled[0] = false;
-    manager.enqueueURL(new URL("http://notfound"), "/tmp", this, new DownloadListener() {
-      
+    manager.enqueueURL(new URL("http://notfound"), "/tmp", this, new ProgressListener() {    
       @Override
-      public void start(URL url, long fileSize) {
+      public void start(final String uid, final long fileSize) {
       }
       
       @Override
-      public void progress(URL url, int percent, long seconds) {
+      public void progress(final String uid, final int percent, final long seconds, final long downloadedSize) {
       }
       
       @Override
-      public void failed(String message) {
+      public void failed(final String uid, final String message) {
         failedCalled[0] = true;
+      }
+
+      @Override
+      public void end(String uid) {
       }
     });
     
