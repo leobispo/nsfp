@@ -23,6 +23,7 @@ import com.charite.esp.model.ESP;
  * This interface will be used by the ESP parser to provide an ESP parsed entry to the application.
  * 
  * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 public interface ESPReader {

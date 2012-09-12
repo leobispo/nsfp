@@ -21,6 +21,7 @@ package com.charite.thirdpartydb.dao;
  * This interface will allow the third party manager decide if the Third Party database is empty or not.
  * 
  * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 public interface ThirdPartyDatabaseDao {

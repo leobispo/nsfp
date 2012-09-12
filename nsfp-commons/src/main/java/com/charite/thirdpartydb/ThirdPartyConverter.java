@@ -19,19 +19,23 @@ package com.charite.thirdpartydb;
 
 import java.io.File;
 
+import com.charite.progress.ProgressListener;
+
 /**
  * This interface will convert a third party database file to other database format.
- * 
+ *
  * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 public interface ThirdPartyConverter {
-  
+
   /**
    * Implement this method to convert a third party database file to other database format.
-   * 
+   *
    * @param file Database to be converted.
-   * 
+   * @param progress Progress listener used to show the percent of completed task.
+   *
    */
-  public void convert(final File file);
+  public void convert(final File file, final ProgressListener progress);
 }

@@ -2,14 +2,13 @@ package com.charite.nsfp.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
 @Table(name="gene")
 public class Gene {
-  @Id @GeneratedValue
+  @Id //@GeneratedValue
   @Column(name = "gene_id")
   private Long id;
   
@@ -22,14 +21,28 @@ public class Gene {
   @Column(name = "uniprot_id", length = 64)
   private String uniprotId;
   
-  @Column(name = "ensembl_geneid")
+  @Column(name = "cds_strand")
   private Character cdsStrand;
   
-  @Column(name = "cds_strand", length = 255)
+  @Column(name = "ensembl_geneid", length = 255)
   private String ensemblGeneId;
   
   @Column(name = "ensembl_transcript_id", length = 255)
   private String ensemblTranscriptId;
+
+  public Gene() {
+  }
+  
+  public Gene(final Long id, final String geneName, final String uniprotAcc, final String uniprotId,
+    final Character cdsStrand, final String ensemblGeneId, final String ensemblTranscriptId) {
+    this.id = id;
+    this.geneName = geneName;
+    this.uniprotAcc = uniprotAcc;
+    this.uniprotId = uniprotId;
+    this.cdsStrand = cdsStrand;
+    this.ensemblGeneId = ensemblGeneId;
+    this.ensemblTranscriptId = ensemblTranscriptId;
+  }
 
   public Long getId() {
     return id;
@@ -86,15 +99,19 @@ public class Gene {
   public void setEnsemblTranscriptId(String ensemblTranscriptId) {
     this.ensemblTranscriptId = ensemblTranscriptId;
   }
-  
-  //TODO: Getter Setter, To String, Hash, Equals!!!
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     
     builder.append("[+] Gene ==================================================\n")
-           .append(id.toString());
+           .append("Gene Id               : ").append(id).append("\n")
+           .append("Gene Name             : ").append(geneName).append("\n")
+           .append("Unit. Prot. ACC       : ").append(uniprotAcc).append("\n")
+           .append("Unit. Prot. Id        : ").append(uniprotId).append("\n")
+           .append("CDS Strand            : ").append(cdsStrand).append("\n")
+           .append("Ensembl Gene Id       : ").append(ensemblGeneId).append("\n")
+           .append("Ensembl Transcript Id : ").append(ensemblTranscriptId).append("\n");
     
     return builder.toString();
   }
@@ -103,6 +120,12 @@ public class Gene {
   public int hashCode() {
     int hash = 0;
     hash = 31 * hash + hash(id);
+    hash = 31 * hash + hash(geneName);
+    hash = 31 * hash + hash(uniprotAcc);
+    hash = 31 * hash + hash(uniprotId);
+    hash = 31 * hash + hash(cdsStrand);
+    hash = 31 * hash + hash(ensemblGeneId);
+    hash = 31 * hash + hash(ensemblTranscriptId);
 
     return hash;    
   }
@@ -111,7 +134,14 @@ public class Gene {
   public boolean equals(Object o) {
     if (o instanceof Gene) {
       Gene c = (Gene) o;
-      return (equal(id, c.id));
+      return (equal(id, c.id) 
+           && equal(geneName, c.geneName)
+           && equal(uniprotAcc, c.uniprotAcc)
+           && equal(uniprotId, c.uniprotId)
+           && equal(cdsStrand, c.cdsStrand) 
+           && equal(ensemblGeneId, c.ensemblGeneId)
+           && equal(ensemblTranscriptId, c.ensemblTranscriptId)
+      );
     }
     
     return false;

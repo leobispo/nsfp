@@ -20,29 +20,30 @@ package com.charite.download;
 /**
  * This interface is responsible for returning the result of a download. You can check the file name, if an error occurred and
  * receive a data specific object passed to the DownloadManager enqueueFile method.
- * 
- * @author Leonard Bispo de Oliveira
+ *
+ * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 public interface DownloadResult<T> {
   /**
    * The absolute path of the file.
-   * 
+   *
    * @return The absolute path of the file.
    */
   public String fileName();
-  
+
   /**
    * Return if an error occurred while downloading the file.
-   * 
+   *
    * @return True if error, otherwise file.
-   * 
+   *
    */
   public boolean isError();
-  
+
   /**
    * User specific data passed to the DownloadManager enqueueFile method.
-   * 
+   *
    * @return User specific data.
    */
   public T data();

@@ -123,8 +123,8 @@ public class NSFPAlizer {
       e.printStackTrace();
     }
 
-    try {    
-
+    
+    try {
       ConfigurableApplicationContext context = new ClassPathXmlApplicationContext(new String[] { "META-INF/nsfp_beans.xml" }, false);
 
       PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
@@ -139,13 +139,15 @@ public class NSFPAlizer {
       ThirdPartyDatabaseManager installManager = (ThirdPartyDatabaseManager) context.getBean("ThirdPartyDatabaseManager");
       installManager.install();
 
-      NSFPManager nsfpManager = (NSFPManager) context.getBean("NSFPManager");
+      //NSFPManager nsfpManager = (NSFPManager) context.getBean("NSFPManager");
       //nsfpManager.setFilters()
       
+      //TODO: I will use a message pass strategy to do all in parallel
       //TODO: first I will pass the SNV filters
       //TODO: Second I will generate the NSFP's
       //TODO: Third I will pass the NSFP filters
-      
+     
+      context.close();
     }
     catch (Exception e) {
       e.printStackTrace();

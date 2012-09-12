@@ -1,4 +1,4 @@
-package com.charite.nsfp.test.esp;
+package com.charite.nsfp.test.nsfp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -11,43 +11,51 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
-import com.charite.esp.model.ESP;
-import com.charite.esp.parser.ESPParser;
-import com.charite.esp.reader.ESPReader;
 import com.charite.exception.InvalidFormatException;
 import com.charite.exception.ParserException;
 import com.charite.model.ChromosomeId;
+import com.charite.nsfp.model.Gene;
+import com.charite.nsfp.model.Variant;
+import com.charite.nsfp.parser.NSFPParser;
+import com.charite.nsfp.reader.NSFPReader;
 import com.charite.progress.ProgressListener;
 
-//TODO: Test the ProgressListener
-public class ESPParserTest {
-  private static final List<ESP> espList = new ArrayList<ESP>() {
-    private static final long serialVersionUID = 1733347950107713342L;
-  {
-    add(new ESP(new ChromosomeId((short) 2, 41612, 'T', 'C'), (short)  2, (short) 11880, (float) 1.6835016E-4));
-    add(new ESP(new ChromosomeId((short) 2, 41615, 'T', 'G'), (short)  1, (short) 11877, (float) 8.419635E-5));
-    add(new ESP(new ChromosomeId((short) 2, 41647, 'G', 'A'), (short) 42, (short) 11778, (float) 0.0035659703));
-    add(new ESP(new ChromosomeId((short) 2, 41686, 'C', 'T'), (short) 11, (short)  4555, (float) 0.0024149287));
-    add(new ESP(new ChromosomeId((short) 2, 45422, 'T', 'A'), (short)  1, (short) 12169, (float) 8.217602E-5));
-    add(new ESP(new ChromosomeId((short) 2, 45480, 'T', 'C'), (short)  1, (short) 12383, (float) 8.0755875E-5));
-  }};
-  
+public class NSFPParserTest {
+  private static final List<Variant> variantList = new ArrayList<Variant>() {
+    private static final long serialVersionUID = -1262041198651514757L;
+    {
+      add(new Variant(new ChromosomeId((short) 1, 35138, 'T', 'A'), 'X', 'Y', 2, 86, -5.3f, -1f, -1f, 0.593f, (short) -1, -1f, new Gene(0L, "FAM138A", "None", "test", '-', "ENSG00000237613", "ENST00000417324")));
+      add(new Variant(new ChromosomeId((short) 2, 35139, 'T', 'A'), 'X', 'L', 4, 86, -1f, -1f, 7.75f, -1.28f, (short) -1, -1f, new Gene(1L, "FAM13AA", ".", "test2", '+', "ENSG00000237613", "ENST00000417324")));
+      add(new Variant(new ChromosomeId((short) 1, 35140, 'A', 'C'), 'X', 'E', -1, 86, 7f, -1f, -1f, 0.699f, (short) -1, -1f, new Gene(0L, "FAM138A", "None", "test", '-', "ENSG00000237613", "ENST00000417324")));
+      add(new Variant(new ChromosomeId((short) 1, 35140, 'A', 'T'), 'X', 'K', -1, 86, -1f, -1f, -1f, 0.699f, (short) -1, 6.66f, new Gene(2L, "FAM137A", ".", ".", '+', "ENSG00000237613", "ENST00000417324")));
+      add(new Variant(new ChromosomeId((short) 1, 35142, 'G', 'A'), 'T', 'M', 8, 85, 0f, -1f, -1f, -0.102f, (short) -1, -1f, new Gene(3L, "FAM139A", "Test", "test3", '?', "ENSG00000237613", "ENST00000417324")));
+      add(new Variant(new ChromosomeId((short) 5, 35142, 'G', 'C'), 'T', 'R', -1, 85, 0f, -1f, -1f, -0.102f, (short) -1, -1f, new Gene(4L, "FAM111A", ".", "test5", '+', "ENSG00000237615", "ENST00000417320")));
+    }
+  };
+    
   @Test
   public void testParser() throws Exception {
     final boolean functionCalled[] = { false, false };
 
     final AtomicInteger idx = new AtomicInteger();
-    ESPParser parser = new ESPParser(new ESPReader() {
-      
-      @Override
-      public boolean read(final ESP esp) {
-        assertEquals(espList.get(idx.getAndIncrement()), esp);
-        return true;
-      }
+    NSFPParser parser = new NSFPParser(new NSFPReader() {
       
       @Override
       public void setUp() {
         functionCalled[0] = true;
+      }
+      
+      @Override
+      public boolean read(Gene gene) {
+        return true;
+      }
+      
+      @Override
+      public boolean read(Variant variant) {
+        Variant v = variantList.get(idx.getAndIncrement());
+        v.getGene().setId(variant.getGene().getId());
+        assertEquals(v, variant);
+        return true;
       }
       
       @Override
@@ -56,14 +64,16 @@ public class ESPParserTest {
       }
     });
     
-    File file = new File("src/test/resources/esp_unittest.chr");
+    File file = new File("src/test/resources/nsfp_unittest.chr");
     parser.parse(file, new ProgressListener() {
+      
       @Override
       public void start(String uid, long dataSize) {
       }
       
       @Override
       public void progress(String uid, int percent, long seconds, long currentDataSize) {
+
       }
       
       @Override
@@ -74,8 +84,7 @@ public class ESPParserTest {
       public void end(String uid) {
       }
     });
-    
-    assertEquals(idx.get(), espList.size());
+
     assertTrue(functionCalled[0]);
     assertTrue(functionCalled[1]);
   }
@@ -83,15 +92,19 @@ public class ESPParserTest {
   @Test
   public void testFileNotExists() throws Exception {
     boolean doesNotExists = false;
-    ESPParser parser = new ESPParser(new ESPReader() {
-      
+    NSFPParser parser = new NSFPParser(new NSFPReader() {
       @Override
-      public boolean read(final ESP esp) {
-        return true;
+      public void setUp() {
       }
       
       @Override
-      public void setUp() {
+      public boolean read(Gene gene) {
+        return false;
+      }
+      
+      @Override
+      public boolean read(Variant variant) {
+        return false;
       }
       
       @Override
@@ -99,7 +112,7 @@ public class ESPParserTest {
       }
     });
     
-    File file = new File("src/test/resources/esp_unittest.ch");
+    File file = new File("src/test/resources/nsfp_unittest.ch");
     try {
       parser.parse(file, new ProgressListener() {
         @Override
@@ -125,12 +138,12 @@ public class ESPParserTest {
     
     assertTrue(doesNotExists);
   }
-
+  
   @Test
   public void testNullReader() {
     boolean nullReader = false;
     try {
-      new ESPParser(null);
+      new NSFPParser(null);
     }
     catch (ParserException e) {
       nullReader = true;
@@ -142,15 +155,20 @@ public class ESPParserTest {
   @Test
   public void testParserEmptyFile() throws Exception {
     boolean emptyFile = false;
-    ESPParser parser = new ESPParser(new ESPReader() {
-      
-      @Override
-      public boolean read(final ESP esp) {
-        return true;
-      }
+    NSFPParser parser = new NSFPParser(new NSFPReader() {
       
       @Override
       public void setUp() {
+      }
+      
+      @Override
+      public boolean read(Gene gene) {
+        return false;
+      }
+      
+      @Override
+      public boolean read(Variant variant) {
+        return false;
       }
       
       @Override
@@ -183,20 +201,25 @@ public class ESPParserTest {
     }
     
     assertTrue(emptyFile);
-  }  
+  }
   
   @Test
   public void testParserInvalidHeader() throws Exception {
     boolean invalidHeader = false;
-    ESPParser parser = new ESPParser(new ESPReader() {
-      
-      @Override
-      public boolean read(final ESP esp) {
-        return true;
-      }
+    NSFPParser parser = new NSFPParser(new NSFPReader() {
       
       @Override
       public void setUp() {
+      }
+      
+      @Override
+      public boolean read(Gene gene) {
+        return false;
+      }
+      
+      @Override
+      public boolean read(Variant variant) {
+        return false;
       }
       
       @Override
@@ -256,53 +279,5 @@ public class ESPParserTest {
     }
     
     assertTrue(invalidHeader);
-  }
- 
-  @Test
-  public void testParserDuplicatedEntry() throws Exception {
-    final boolean functionCalled[] = { false, false };
-
-    final AtomicInteger idx = new AtomicInteger();
-    ESPParser parser = new ESPParser(new ESPReader() {
-      
-      @Override
-      public boolean read(final ESP esp) {
-        assertEquals(espList.get(idx.getAndIncrement()).toString(), esp.toString());
-        return true;
-      }
-      
-      @Override
-      public void setUp() {
-        functionCalled[0] = true;
-      }
-      
-      @Override
-      public void end() {
-        functionCalled[1] = true;
-      }
-    });
-    
-    File file = new File("src/test/resources/esp_unittest_duplicated_short.chr");
-    parser.parse(file, new ProgressListener() {
-      @Override
-      public void start(String uid, long dataSize) {
-      }
-      
-      @Override
-      public void progress(String uid, int percent, long seconds, long currentDataSize) {
-      }
-      
-      @Override
-      public void failed(String uid, String message) {
-      }
-      
-      @Override
-      public void end(String uid) {
-      }
-    });
-    
-    assertEquals(idx.get(), espList.size());
-    assertTrue(functionCalled[0]);
-    assertTrue(functionCalled[1]);
   }
 }

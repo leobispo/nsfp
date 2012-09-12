@@ -11,8 +11,12 @@ public class ConverterException extends RuntimeException {
   public ConverterException(String message) {
     super(message);
   }
-  
+
   public ConverterException(String message, Exception e) {
+    super(message, e);
+  }
+
+  public ConverterException(String message, Throwable e) {
     super(message, e);
   }
 }

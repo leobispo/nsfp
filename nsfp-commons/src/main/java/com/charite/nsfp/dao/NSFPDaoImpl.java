@@ -5,8 +5,10 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.charite.esp.model.ESP;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.charite.model.ChromosomeId;
+import com.charite.nsfp.model.Gene;
 import com.charite.nsfp.model.Variant;
 import com.charite.thirdpartydb.dao.ThirdPartyDatabaseDao;
 
@@ -20,10 +22,18 @@ public class NSFPDaoImpl implements ThirdPartyDatabaseDao, NSFPDao {
   }
 
   @Override
-  public void save(ESP esp) {
-    entityManager.persist(esp);
+  @Transactional
+  public void save(Variant variant) {
+    entityManager.persist(variant.getGene());
+    entityManager.persist(variant);
   }
 
+  @Override
+  @Transactional
+  public void save(Gene gene) {
+    entityManager.persist(gene);
+  }
+  
   @Override
   @SuppressWarnings("unchecked")
   public List<Variant> getAll() {

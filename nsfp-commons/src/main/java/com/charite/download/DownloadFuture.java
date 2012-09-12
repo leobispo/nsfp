@@ -22,33 +22,34 @@ import java.util.List;
 /**
  * This interface is responsible to return the result from a set of enqueued download tasks.
  * This is a Future class, all download operation is asynchronous.
- * 
+ *
  * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 public interface DownloadFuture<T> {
   /**
    * This method will lock the execution until the manager finish the download of all enqueued files and return a set of
    * download results.
-   * 
+   *
    * @return List of download results.
-   * 
+   *
    */
   public List<DownloadResult<T>> get();
-  
+
   /**
    * This method will ask if all downloads are completed. This operation will not lock the thread.
-   * 
+   *
    * @return True if the operation is done, otherwise false.
-   * 
+   *
    */
   public boolean isDone();
-  
+
   /**
    * This method will return if an error occurred in the download method.
-   * 
+   *
    * @return True if an error occurred, otherwise false.
-   * 
+   *
    */
   public boolean isError();
 }

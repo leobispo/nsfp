@@ -1,8 +1,6 @@
 package com.charite.snv.converter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -11,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.charite.esp.dao.ESPDao;
-import com.charite.exception.InvalidFormatException;
+import com.charite.exception.ConverterException;
 import com.charite.model.ChromosomeId;
 import com.charite.nsfp.dao.NSFPDao;
 import com.charite.progress.ProgressListener;
@@ -27,10 +25,10 @@ public final class VCF2SNVConverter implements VCFReader {
 
   @Autowired
   private ProgressListener progressListener;
-  
+
   @Autowired
   private ESPDao espDao;
-  
+
   @Autowired
   private NSFPDao nsfpDao;
 
@@ -48,7 +46,7 @@ public final class VCF2SNVConverter implements VCFReader {
 
       ChromosomeId id = new ChromosomeId(snv.getChromosome(), snv.getPosition(), snv.getRef().charAt(0), snv.getAlt().charAt(0));
       snv.setESP(espDao.findById(id));
-      snv.setVariant(nsfpDao.findById(id));
+      snv.setVariant(nsfpDao.findById(id)); // TODO: This must be inside the filter. I will save lots of SQL calls.
     }
     finally {
       lock.unlock();
@@ -64,10 +62,11 @@ public final class VCF2SNVConverter implements VCFReader {
     }
     finally {
       lock.unlock();
-    } 
+    }
   }
 
   public List<SNV> convert(final File vcfFile) {
+    lock.lock();
     try {
       this.version = null;
       this.header  = null;
@@ -82,23 +81,15 @@ public final class VCF2SNVConverter implements VCFReader {
     try {
       parser.parse(vcfFile, progressListener);
     }
-    catch (FileNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    catch (InvalidFormatException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    catch (Exception e) {
+      throw new ConverterException("Can't convert the ESP file.", e);
     }
 
     return snvs;
   }
 
   public String getVersion() {
+    lock.lock();
     try {
       return version;
     }
@@ -108,6 +99,7 @@ public final class VCF2SNVConverter implements VCFReader {
   }
 
   public List<String> getHeader() {
+    lock.lock();
     try {
       return header;
     }

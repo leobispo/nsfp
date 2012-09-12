@@ -10,6 +10,50 @@
                         http://www.springframework.org/schema/tx/spring-tx.xsd
                         http://www.springframework.org/schema/context
                         http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<bean id="ESPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
+		<constructor-arg>
+			<value>1</value>
+		</constructor-arg>
+		<property name="fileNameRegex">
+			<value>ESP6500\.chr\w+\.snps.txt</value>
+		</property>
+		<property name="downloadUrl">
+			<value>${database.esp.url}</value>
+		</property>
+		<property name="databaseDao">
+			<ref local="ESPDao" />
+		</property>
+		<property name="converterFactory">
+			<ref local="ESPConverterFactory" />
+		</property>
+	</bean>
+
+	<bean id="NSFPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
+		<constructor-arg>
+			<value>8</value>
+		</constructor-arg>
+		<property name="fileNameRegex">
+			<value>dbNSFP2.0b3_variant.chr.*</value>
+		</property>
+		<property name="downloadUrl">
+			<value>${database.nsfp.url}</value>
+		</property>
+		<property name="databaseDao">
+			<ref local="NSFPDao" />
+		</property>
+		<property name="converterFactory">
+			<ref local="NSFPConverterFactory" />
+		</property>
+	</bean>
+	
+	<bean id="DownloadManager" class="com.charite.download.DownloadManager"
+		scope="singleton">
+		<constructor-arg>
+			<value>5</value>
+		</constructor-arg>
+	</bean>
+	
 	<bean id="ThirdPartyDatabaseManager" class="com.charite.thirdpartydb.ThirdPartyDatabaseManager">
 		<property name="databases">
 			<list>
@@ -19,25 +63,15 @@
 		</property>
 	</bean>
 
-	<bean id="PathogenicityFilter" class="com.charite.nsfp.filter.PathogenicityFilter" />
-	<bean id="AutosomalRecessiveFilter" class="com.charite.nsfp.filter.AutosomalRecessiveFilter" />
-
-	<bean id="Filters" class="java.util.ArrayList">
-		<constructor-arg>
-			<list>
-				<ref bean="PathogenicityFilter" />
-				<ref bean="AutosomalRecessiveFilter" />
-			</list>
-		</constructor-arg>
-	</bean>
-
 	<bean id="DownloadListener"
 		class="com.charite.nsfp.NSFPAlizerDownloadListener"
 		scope="singleton" />
 
-    <import resource="converters.xml"/>
-
-	<bean id="ESPConverter" class="com.charite.esp.converter.ESP2SQLPsqlConverter" />
+	<bean id="ESPConverterFactory" class="com.charite.esp.converter.ESP2SQLPsqlConverterFactory" />
+	<bean id="NSFPConverterFactory" class="com.charite.nsfp.converter.NSFP2SQLPsqlConverterFactory" />
+	
+	<bean id="ESPDao" class="com.charite.esp.dao.ESPDaoImpl" />
+	<bean id="NSFPDao" class="com.charite.nsfp.dao.NSFPDaoImpl" />
 
 	<bean id="entityManagerFactory"
 		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">

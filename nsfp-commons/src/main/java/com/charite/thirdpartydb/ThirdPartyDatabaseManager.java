@@ -33,6 +33,7 @@ import com.charite.exception.DownloadException;
  * Responsible to manage all the third party databases (Download, Install, check if it exists, etc.).
  * 
  * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 @Component
@@ -71,7 +72,7 @@ public final class ThirdPartyDatabaseManager {
    * Verify all databases that need to be installed and, for each not installed database,
    * call the Third Party database to download and install it.
    * 
-   * @throws DownloadException
+   * @throws DownloadException, ConverterException.
    * 
    */
   public void install() throws DownloadException, ConverterException {

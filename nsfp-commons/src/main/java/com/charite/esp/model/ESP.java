@@ -24,28 +24,36 @@ import javax.persistence.Table;
 
 import com.charite.model.ChromosomeId;
 
+/**
+ * ESP database model.
+ *
+ * @author Peter Robinson
+ * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
+ *
+ */
 @Entity
 @Table(name="esp")
-public class ESP { 
+public class ESP {
   @EmbeddedId
   private ChromosomeId id = null;
   private Short minor     = null;
   private Short major     = null;
-  
+
   @Column(columnDefinition = "Float")
   private Float frequency = null;
 
   public ESP() {
-    
+
   }
-  
+
   public ESP(ChromosomeId id, Short minor, Short major, Float frequency) {
     this.id        = id;
     this.minor     = minor;
     this.major     = major;
     this.frequency = frequency;
   }
-  
+
   public ChromosomeId getId() {
     return id;
   }
@@ -77,20 +85,20 @@ public class ESP {
   public void setFrequency(Float frequency) {
     this.frequency = frequency;
   }
-  
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    
+
     builder.append("[+] ESP ==================================================\n")
-           .append(id.toString())
+           .append(id)
            .append("Minor     : ").append(minor).append("\n")
            .append("Major     : ").append(major).append("\n")
            .append("Frequency : ").append(frequency).append("\n");
-    
+
     return builder.toString();
   }
-  
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -99,23 +107,27 @@ public class ESP {
     hash = 31 * hash + hash(major);
     hash = 31 * hash + hash(frequency);
 
-    return hash;    
+    return hash;
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (o instanceof ESP) {
       ESP c = (ESP) o;
-      return (equal(id, c.id) && equal(minor, c.minor) && equal(major, c.major) && equal(frequency, c.frequency));
+      return (equal(id, c.id)
+           && equal(minor, c.minor)
+           && equal(major, c.major)
+           && equal(frequency, c.frequency)
+      );
     }
-    
+
     return false;
   }
-  
+
   private static int hash(Object o) {
     return o == null ? 0 : o.hashCode();
   }
-  
+
   private static boolean equal(Object o, Object another)
   {
     return o == null ? another == null : o.equals(another);

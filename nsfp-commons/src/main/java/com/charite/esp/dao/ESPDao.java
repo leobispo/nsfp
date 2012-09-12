@@ -25,7 +25,8 @@ import com.charite.model.ChromosomeId;
 /**
  * ESP Data Access Object.
  * 
- * @author Leonardo Bispo de Oliveira.
+ * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
  *
  */
 public interface ESPDao {
@@ -46,5 +47,13 @@ public interface ESPDao {
    */
   public List<ESP> getAll();
   
+  /**
+   * Find the ESP stored using the id as a search key.
+   *
+   * @param id Chromosome ID to be search.
+   *
+   * @return The ESP element or null.
+   *
+   */
   public ESP findById(final ChromosomeId id);
 }

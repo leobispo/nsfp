@@ -5,6 +5,14 @@ import com.charite.enums.VariantType;
 import com.charite.esp.model.ESP;
 import com.charite.nsfp.model.Variant;
 
+/**
+ * SNV model.
+ *
+ * @author Peter Robinson
+ * @author Leonardo Bispo de Oliveira
+ * @author Daniele Yumi Sunaga de Oliveira
+ *
+ */
 public class SNV {
   private Short chromosome        = null;
   private Integer position        = null;
@@ -20,10 +28,10 @@ public class SNV {
   private String aaMutation       = null;
   private ESP esp                 = null;
   private Variant variant         = null;
-  
-  public SNV() {  
+
+  public SNV() {
   }
-  
+
   public SNV(final Short chromosome, final Integer position, final String ref, final String alt, final VariantType variantType,
     final Genotype genotype, final Integer genotypeQuality, final String geneName, final String refSeqId, final String exon,
     final String cdsMutation, final String aaMutation) {
@@ -40,42 +48,42 @@ public class SNV {
     this.cdsMutation     = cdsMutation;
     this.aaMutation      = aaMutation;
   }
-  
+
   public SNV(final Short chromosome, final Integer position, final String ref, final String alt) {
     this.chromosome  = chromosome;
     this.position    = position;
     this.ref         = ref;
     this.alt         = alt;
   }
-  
+
   public Short getChromosome() {
     return chromosome;
   }
-  
+
   public void setChromosome(Short chromosome) {
     this.chromosome = chromosome;
   }
-  
+
   public Integer getPosition() {
     return position;
   }
-  
+
   public void setPosition(Integer position) {
     this.position = position;
   }
-  
+
   public String getRef() {
     return ref;
   }
-  
+
   public void setRef(String ref) {
     this.ref = ref;
   }
-  
+
   public String getAlt() {
     return alt;
   }
-  
+
   public void setAlt(String alt) {
     this.alt = alt;
   }
@@ -143,7 +151,7 @@ public class SNV {
   public void setAaMutation(String aaMutation) {
     this.aaMutation = aaMutation;
   }
-  
+
   public ESP getESP() {
     return esp;
   }
@@ -159,7 +167,7 @@ public class SNV {
   public void setVariant(Variant variant) {
     this.variant = variant;
   }
-  
+
   boolean isNonPathogenic() {
     return isPredictedNonMissensePath();
   }
@@ -180,10 +188,10 @@ public class SNV {
 
     return false;
   }
-  
+
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    
+
     builder.append("[+] VCF ==================================================\n")
            .append("Chromosome                     : ").append(chromosome).append("\n")
            .append("Position                       : ").append(position).append("\n")
@@ -199,14 +207,14 @@ public class SNV {
            .append("AA Mutations                   : ").append(aaMutation).append("\n")
            .append("Is Predicted non missense Path : ").append(isPredictedNonMissensePath()).append("\n")
            .append(esp).append("\n").append(variant).append("\n");
-    
+
     return builder.toString();
   }
-  
+
   private static int hash(Object o) {
     return o == null ? 0 : o.hashCode();
   }
-  
+
   public int hashCode() {
     int hash = 0;
     hash = 31 * hash + hash(chromosome);
@@ -224,9 +232,9 @@ public class SNV {
     hash = 31 * hash + hash(esp);
     hash = 31 * hash + hash(variant);
 
-    return hash;    
+    return hash;
   }
-  
+
   private static boolean equal(Object o, Object another)
   {
     return o == null ? another == null : o.equals(another);
@@ -236,11 +244,11 @@ public class SNV {
     if (o instanceof SNV) {
       SNV c = (SNV) o;
       return (equal(chromosome, c.chromosome) && equal(position, c.position) && equal(ref, c.ref) && equal(alt, c.alt)
-        && equal(variantType, c.variantType) && equal(genotype, c.genotype) && equal(genotypeQuality, c.genotypeQuality) 
+        && equal(variantType, c.variantType) && equal(genotype, c.genotype) && equal(genotypeQuality, c.genotypeQuality)
         && equal(geneName, c.geneName) && equal(refSeqId, c.refSeqId) && equal(exon, c.exon) && equal(cdsMutation, c.cdsMutation)
         && equal(aaMutation, c.aaMutation) && equal(esp, c.esp) && equal(variant, c.variant));
     }
-    
+
     return false;
   }
 }

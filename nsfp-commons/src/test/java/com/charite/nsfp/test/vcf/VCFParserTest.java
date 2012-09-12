@@ -157,16 +157,16 @@ public class VCFParserTest {
   }
 
   @Test
-  public void testNullWriter() {
-    boolean nullWriter = false;
+  public void testNullReader() {
+    boolean nullReader = false;
     try {
       new VCFParser(null);
     }
     catch (ParserException e) {
-      nullWriter = true;
+      nullReader = true;
     }
     
-    assertTrue(nullWriter);
+    assertTrue(nullReader);
   }
   
   @Test

@@ -35,7 +35,8 @@ import com.charite.thirdpartydb.dao.ThirdPartyDatabaseDao;
  *
  */
 public class ESPDaoImpl implements ThirdPartyDatabaseDao, ESPDao {
-  
+
+  /** JPA Entity manager. */
   private EntityManager entityManager;
 
   /**
@@ -73,6 +74,14 @@ public class ESPDaoImpl implements ThirdPartyDatabaseDao, ESPDao {
     return (List<ESP>) entityManager.createQuery("SELECT esp FROM ESP esp").getResultList();
   }
   
+  /**
+   * Find the ESP stored using the id as a search key.
+   *
+   * @param id Chromosome ID to be search.
+   *
+   * @return The ESP element or null.
+   *
+   */
   @Override
   public ESP findById(final ChromosomeId id) {
     return entityManager.find(ESP.class, id);
