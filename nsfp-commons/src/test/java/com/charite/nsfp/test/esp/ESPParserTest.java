@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import com.charite.esp.model.ESP;
 import com.charite.esp.parser.ESPParser;
-import com.charite.esp.reader.ESPReader;
+import com.charite.esp.parser.ESPReader;
 import com.charite.exception.InvalidFormatException;
 import com.charite.exception.ParserException;
 import com.charite.model.ChromosomeId;

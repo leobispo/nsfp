@@ -1,10 +1,11 @@
 package com.charite.nsfp;
 
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -13,12 +14,15 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.ClassPathResource;
 
+import com.charite.filter.Filter;
+import com.charite.nsfp.model.NSFP;
 import com.charite.progress.ProgressListener;
-import com.charite.thirdpartydb.ThirdPartyDatabaseManager;
+import com.charite.snv.model.SNV;
 
 final class NSFPAlizerDownloadListener implements ProgressListener {
   private final List<Download> downloads = new ArrayList<Download>()
@@ -79,26 +83,24 @@ final class NSFPAlizerDownloadListener implements ProgressListener {
 
   @Override
   public void end(final String uid) {
-    // TODO Auto-generated method stub
-    
   }
-
 }
 
 public class NSFPAlizer {
   public static void main(String[] args) {
-
-
-    //TODO: parse command line
-    //TODO: create all filters passed by command line
-    //TODO: next - Parse VCF FILE!!
-
-    final Options options = new Options();  
-    options.addOption("c", "config", true, "Configuration File.");
-    options.addOption("v", "vcf", true, "Path to VCF file with mutations to be analyzed.");
-    options.addOption("f", "flags", true, "Pass various flags for filtering.");
-    options.addOption("o", "output", true, "Name of output file");
-
+    final Options options = new Options() {
+      private static final long serialVersionUID = 674039064451080584L;
+    {
+      addOption("c", "config", true, "Configuration File.");
+      addOption("v", "vcf", true, "Path to VCF file with mutations to be analyzed.");
+      addOption("f", "filters", true, "Pass various filters.");
+      addOption("o", "output", true, "Name of output file");
+    }};
+    
+    String vcfFile      = "";
+    String filters      = "";
+    String outputFile   = "";
+    String outputFormat = "";
     final CommandLineParser cmdParser = new GnuParser();  
     CommandLine cmd;
 
@@ -106,53 +108,100 @@ public class NSFPAlizer {
     try {
       cmd = cmdParser.parse(options, args);
 
-      if (cmd.hasOption('c')) {
+      if (cmd.hasOption('c'))
         beanProperties.load(new FileInputStream(cmd.getOptionValue('c')));
+      if (cmd.hasOption('v'))
+        vcfFile = cmd.getOptionValue('v');
+      
+      if (cmd.hasOption('f'))
+        filters = cmd.getOptionValue('f');
+      
+      if (cmd.hasOption('o')) {
+        outputFile = cmd.getOptionValue('o');
+        outputFormat = outputFile.substring(outputFile.lastIndexOf('.')).toLowerCase();
       }
     }
-    catch (ParseException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    catch (FileNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    catch (ParseException | IOException ie) {
+      printUsage(options);
     }
 
-    
+    if (beanProperties.isEmpty() || vcfFile.isEmpty() || filters.isEmpty() || outputFile.isEmpty() || outputFormat.isEmpty())
+      printUsage(options);
+
     try {
-      ConfigurableApplicationContext context = new ClassPathXmlApplicationContext(new String[] { "META-INF/nsfp_beans.xml" }, false);
-
+      GenericApplicationContext context = new GenericApplicationContext();
+      
+      List<Filter<SNV, SNV>> snvFilters = new ArrayList<>();
+      context.getBeanFactory().registerSingleton("SNVFilters", snvFilters);
+      
+      List<Filter<SNV, NSFP>> nsfpFilters = new ArrayList<>();
+      context.getBeanFactory().registerSingleton("NSFPFilters", nsfpFilters);
+      
+      //TODO: Inheritance filters!!!
+      
+      (new XmlBeanDefinitionReader(context)).loadBeanDefinitions(new ClassPathResource("META-INF/nsfp_beans.xml"));
+      
       PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-
       configurer.setProperties(beanProperties);
       configurer.setIgnoreResourceNotFound(false);
       configurer.setIgnoreUnresolvablePlaceholders(false);
-
-      context.addBeanFactoryPostProcessor(configurer);    
-      context.refresh();
-
-      ThirdPartyDatabaseManager installManager = (ThirdPartyDatabaseManager) context.getBean("ThirdPartyDatabaseManager");
-      installManager.install();
-
-      //NSFPManager nsfpManager = (NSFPManager) context.getBean("NSFPManager");
-      //nsfpManager.setFilters()
       
-      //TODO: I will use a message pass strategy to do all in parallel
-      //TODO: first I will pass the SNV filters
-      //TODO: Second I will generate the NSFP's
-      //TODO: Third I will pass the NSFP filters
-     
+      context.addBeanFactoryPostProcessor(configurer);
+      context.refresh();
+      
+      @SuppressWarnings("unchecked")
+      Map<String, Filter<SNV, SNV>> snvFilterMap = (Map<String, Filter<SNV, SNV>>) context.getBean("AvailableSNVFilters");
+      
+      @SuppressWarnings("unchecked")
+      Map<String, Filter<SNV, NSFP>> nsfpFilterMap = (Map<String, Filter<SNV, NSFP>>) context.getBean("AvailableNSFPFilters");
+      
+      if (!readFilters(filters, snvFilterMap, nsfpFilterMap, snvFilters, nsfpFilters))
+        printFilterUsage(snvFilterMap, nsfpFilterMap);
+
+      //ThirdPartyDatabaseManager installManager = context.getBean(ThirdPartyDatabaseManager.class);
+      NSFPManager nsfpManager                  = context.getBean(NSFPManager.class);
+      
+      //installManager.install();
+      nsfpManager.execute(new File(vcfFile), new File(outputFile), outputFormat);
+
       context.close();
     }
     catch (Exception e) {
       e.printStackTrace();
       System.out.println(ExceptionUtils.getRootCauseMessage(e));
     }
-
+  }
+  
+  private static void printFilterUsage(final Map<String, Filter<SNV, SNV>> snvFilterMap, final Map<String, Filter<SNV, NSFP>> nsfpFilterMap) {
+    System.exit(1);
+  }
+  
+  private static void printUsage(final Options options) {
+    //  System.exit(1); TODO!!!
+  }
+  
+  private static boolean readFilters(final String filters, final Map<String, Filter<SNV, SNV>> snvFilterMap, final Map<String, Filter<SNV, NSFP>> nsfpFilterMap,
+    final List<Filter<SNV, SNV>> snvFilters, final List<Filter<SNV, NSFP>> nsfpFilters) {
+    for (String filter : filters.split(",")) {
+      String tokens[] = filter.split("=");
+      final Filter<SNV, SNV> snvFilter = snvFilterMap.get(tokens[0]);
+      final Filter<SNV, NSFP> nsfpFilter = nsfpFilterMap.get(tokens[0]);
+      
+      if (snvFilter != null)
+        snvFilters.add(snvFilter);
+      
+      if (nsfpFilter != null)
+        nsfpFilters.add(nsfpFilter);
+      
+      if (tokens.length > 1) {
+        if (snvFilter != null && !snvFilter.setParameter(tokens[1]))
+          return false;
+        
+        if (nsfpFilter != null && !nsfpFilter.setParameter(tokens[1]))
+          return false;
+      }      
+    }
+    
+    return true;
   }
 }

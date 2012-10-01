@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.charite.esp.dao.ESPDao;
 import com.charite.esp.model.ESP;
 import com.charite.esp.parser.ESPParser;
-import com.charite.esp.reader.ESPReader;
+import com.charite.esp.parser.ESPReader;
 import com.charite.exception.ConverterException;
 import com.charite.progress.ProgressListener;
 import com.charite.thirdpartydb.ThirdPartyConverter;

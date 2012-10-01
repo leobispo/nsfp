@@ -23,6 +23,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 import com.charite.model.ChromosomeId;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
  * ESP database model.
@@ -34,6 +35,7 @@ import com.charite.model.ChromosomeId;
  */
 @Entity
 @Table(name="esp")
+@XStreamAlias("ESP")
 public class ESP {
   @EmbeddedId
   private ChromosomeId id = null;

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import com.charite.esp.model.ESP;
 import com.charite.esp.parser.ESPParser;
-import com.charite.esp.reader.ESPReader;
+import com.charite.esp.parser.ESPReader;
 import com.charite.exception.ConverterException;
 import com.charite.progress.ProgressListener;
 import com.charite.thirdpartydb.ThirdPartyConverter;
@@ -189,6 +189,7 @@ class ESP2SQLPsqlConverter implements ESPReader, ThirdPartyConverter {
         throw new ConverterException("Problems to run the PSQL program", e);
       }
       catch (InterruptedException e) {
+        throw new ConverterException("Problems to wait the psl", e);
       }
     }
     finally {

@@ -1,4 +1,4 @@
-package com.charite.nsfp.reader;
+package com.charite.nsfp.parser;
 
 import com.charite.nsfp.model.Gene;
 import com.charite.nsfp.model.Variant;

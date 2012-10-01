@@ -20,7 +20,6 @@ import com.charite.exception.ParserException;
 import com.charite.model.ChromosomeId;
 import com.charite.nsfp.model.Gene;
 import com.charite.nsfp.model.Variant;
-import com.charite.nsfp.reader.NSFPReader;
 import com.charite.progress.ProgressListener;
 
 public class NSFPParser {
@@ -47,7 +46,7 @@ public class NSFPParser {
   private static final String ENSEMBL_GENEID        = "Ensembl_geneid";
   private static final String ENSEMBL_TRANSCRIPTID  = "Ensembl_transcriptid";
 
-  private final static ConcurrentHashMap<String, Gene> genesRead = new ConcurrentHashMap<String, Gene>();
+  private final static ConcurrentHashMap<String, Gene> genesRead = new ConcurrentHashMap<>();
   private final static AtomicLong geneId = new AtomicLong(0);
   
   private final NSFPReader reader;
@@ -82,10 +81,10 @@ public class NSFPParser {
     if (!file.exists())
       throw new FileNotFoundException("File does not exists: " + file.getAbsolutePath());
 
-    final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
-    final BufferedReader reader = new BufferedReader(new InputStreamReader(cntIs));
+   
 
-    try {
+    try (final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
+         final BufferedReader reader     = new BufferedReader(new InputStreamReader(cntIs))) {
       String line;
       while ((line = reader.readLine()) != null && (line.startsWith("##") || line.isEmpty())) {}
       
@@ -115,8 +114,9 @@ public class NSFPParser {
       int percent  = -1;
       
       String currentVariant = null;
-      final HashMap<Float, Variant> variantList = new HashMap<Float, Variant>();
-      
+      final HashMap<Float, Variant> variantList = new HashMap<>();
+ 
+      long cachedId = -1;     
       while ((line = reader.readLine()) != null) {
         if (line.isEmpty() || line.startsWith("#"))
           continue;
@@ -133,9 +133,14 @@ public class NSFPParser {
         final String ensemblTranscriptId = elements[header.get(ENSEMBL_TRANSCRIPTID)].split(";")[0];
         
         final String geneName = elements[header.get(GENENAME)].split(";")[0];
+
+        if (cachedId == -1)
+          cachedId = geneId.getAndIncrement();
+
         Gene tmp;
-        Gene gene = new Gene(geneId.getAndIncrement(), geneName, uniprotAcc, uniprotId, cdsStrand, ensemblGeneId, ensemblTranscriptId);
+        Gene gene = new Gene(cachedId, geneName, uniprotAcc, uniprotId, cdsStrand, ensemblGeneId, ensemblTranscriptId);
         if ((tmp = genesRead.putIfAbsent(geneName, gene)) == null) {
+          cachedId = -1;
           if (!this.reader.read(gene))
             throw new ParserException("Problems to read the Gene using NSFPReader");
         }
@@ -179,7 +184,6 @@ public class NSFPParser {
         progress.end(file.getAbsolutePath());
     }
     finally {
-      reader.close();
       this.reader.end();
     }
   }
@@ -188,7 +192,7 @@ public class NSFPParser {
     if (!headerLine.startsWith("#chr"))
       throw new InvalidFormatException("File does not contain a header");
     
-    final Hashtable<String, Integer> header = new Hashtable<String, Integer>();
+    final Hashtable<String, Integer> header = new Hashtable<>();
     
     int i = 0;
     StringTokenizer tokenizer = new StringTokenizer(headerLine, DELIMITER);

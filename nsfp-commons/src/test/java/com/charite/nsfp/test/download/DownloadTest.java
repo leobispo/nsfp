@@ -177,6 +177,7 @@ public class DownloadTest {
               Thread.sleep(1000);
           }
           catch (InterruptedException e) {
+            throw new DownloadException("Problems to run the test", e);
           }
         }
       

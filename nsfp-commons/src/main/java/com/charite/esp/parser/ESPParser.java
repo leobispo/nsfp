@@ -31,7 +31,6 @@ import java.util.StringTokenizer;
 import org.apache.commons.io.input.CountingInputStream;
 
 import com.charite.esp.model.ESP;
-import com.charite.esp.reader.ESPReader;
 import com.charite.exception.InvalidFormatException;
 import com.charite.exception.ParserException;
 import com.charite.model.ChromosomeId;
@@ -84,12 +83,10 @@ public final class ESPParser {
     if (!file.exists())
       throw new FileNotFoundException("File does not exists: " + file.getAbsolutePath());
 
-    HashSet<String> addedElements = new HashSet<String>();
+    HashSet<String> addedElements = new HashSet<>();
 
-    final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
-    final BufferedReader reader = new BufferedReader(new InputStreamReader(cntIs));
-
-    try {
+    try (final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
+         final BufferedReader reader = new BufferedReader(new InputStreamReader(cntIs))) {
       String line;
       while ((line = reader.readLine()) != null && (line.startsWith("##") || line.isEmpty())) {}
 
@@ -147,7 +144,6 @@ public final class ESPParser {
         progress.end(file.getAbsolutePath());
     }
     finally {
-      reader.close();
       this.reader.end();
     }
   }
@@ -192,7 +188,7 @@ public final class ESPParser {
     if (!headerLine.startsWith("#base(NCBI.37)"))
       throw new InvalidFormatException("File does not contain a header");
 
-    final Hashtable<String, Integer> header = new Hashtable<String, Integer>();
+    final Hashtable<String, Integer> header = new Hashtable<>();
 
     int i = 0;
     StringTokenizer tokenizer = new StringTokenizer(headerLine, DELIMITER);

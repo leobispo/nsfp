@@ -20,7 +20,6 @@ import com.charite.exception.InvalidFormatException;
 import com.charite.exception.ParserException;
 import com.charite.progress.ProgressListener;
 import com.charite.snv.model.SNV;
-import com.charite.vcf.reader.VCFReader;
 
 public final class VCFParser {
   private static final String DELIMITER = "\t";
@@ -35,6 +34,7 @@ public final class VCFParser {
   private static final String INFO   = "INFO";
   private static final String FORMAT = "FORMAT";
 
+  final private List<String> samples = new ArrayList<String>();
   final private VCFReader reader;
 
   public VCFParser(final VCFReader reader) throws ParserException {
@@ -44,12 +44,96 @@ public final class VCFParser {
     this.reader = reader;
   }
 
+  public void parse(File file, ProgressListener progress) throws FileNotFoundException, IOException, InvalidFormatException {
+    if (!file.exists())
+      throw new FileNotFoundException("File does not exists: " + file.getAbsolutePath());
+
+    final List<String> rawHeader = new ArrayList<>();
+    try (final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
+         final BufferedReader reader = new BufferedReader(new InputStreamReader(cntIs));){
+      String line;
+
+      if ((line = reader.readLine()) == null || !line.startsWith("##fileformat=VCF"))
+        throw new InvalidFormatException("Cannot read the file, fileformat not found");
+
+      final String version = line.substring("##fileformat=VCF".length()).trim();
+      rawHeader.add(line);
+
+      while ((line = reader.readLine()) != null && (line.startsWith("##") || line.isEmpty()))
+        rawHeader.add(line);
+
+      if (line == null)
+        throw new InvalidFormatException("File is empty");
+
+      rawHeader.add(line);
+      Hashtable<String, Integer> header = parseHeader(line);
+
+      if (!header.containsKey(CHROM) || !header.containsKey(POS) || !header.containsKey(ID) ||
+          !header.containsKey(REF) || !header.containsKey(ALT) || !header.containsKey(QUAL) ||
+          !header.containsKey(FILTER) || !header.containsKey(INFO))
+        throw new InvalidFormatException("Header does not contain all necessary fields");
+
+      this.reader.setUp(version);
+
+      long length = file.length();
+
+      if (progress != null)
+        progress.start(file.getAbsolutePath(), length);
+
+      long stime = (new Date()).getTime();
+      long seconds = 0;
+      int percent  = -1;
+      while ((line = reader.readLine()) != null) {
+        if (line.isEmpty() || line.startsWith("#"))
+          continue;
+
+        final String elements[] = line.split(DELIMITER);
+        if (elements.length != header.size())
+          throw new InvalidFormatException("Element does not have the same header size");
+
+        elements[header.get(CHROM)] = elements[header.get(CHROM)].replaceFirst("chr", "");
+
+        final Short chromosome = elements[header.get(CHROM)].equals("X") ? 23 : elements[header.get(CHROM)].equals("Y") ? 24 :
+          elements[header.get(CHROM)].equals("M") ? 25 : Short.parseShort(elements[header.get(CHROM)]);
+
+        final Integer position = Integer.parseInt(elements[header.get(POS)]);
+        final String  ref      = elements[header.get(REF)];
+        final String  alt      = elements[header.get(ALT)];
+        final String  info     = elements[header.get(INFO)];
+        final String  format   = header.containsKey(FORMAT) ? elements[header.get(FORMAT)] : null;
+        final String  sample   = (format != null && elements.length >= header.get(FORMAT) + 1) ? elements[header.get(FORMAT) + 1] : null;
+
+        readElement(chromosome, position, ref, alt, info, format, sample);
+
+        float readLength = cntIs.getByteCount();
+        int newPercent = (int) ((readLength / length) * 100);
+
+        long diff = (new Date()).getTime() - stime;
+        long elapsedSeconds = diff / 1000;
+
+        if (percent != newPercent || seconds < elapsedSeconds) {
+          seconds = elapsedSeconds;
+          percent = newPercent;
+          if (progress != null)
+            progress.progress(file.getAbsolutePath(), percent, seconds, (long) readLength);
+        }
+      }
+
+      if (progress != null)
+        progress.end(file.getAbsolutePath());
+    }
+    finally {
+      this.reader.end(rawHeader, samples);
+    }
+  }
+
   private Hashtable<String, Integer> parseHeader(final String headerLine) throws InvalidFormatException, ParserException {
     if (!headerLine.startsWith("#CHROM"))
       throw new InvalidFormatException("File does not contain a header");
 
-    final Hashtable<String, Integer> header = new Hashtable<String, Integer>();
+    final Hashtable<String, Integer> header = new Hashtable<>();
 
+    boolean canBeSample = false;
     int i = 0;
     StringTokenizer tokenizer = new StringTokenizer(headerLine, DELIMITER);
     while (tokenizer.hasMoreElements()) {
@@ -58,9 +142,13 @@ public final class VCFParser {
         header.put(CHROM, i++);
       else
         header.put(token, i++);
+      
+      if (token.equals(INFO))
+        canBeSample = true;
+      
+      if (canBeSample && !token.equals(FORMAT))
+        samples.add(token);
     }
-
-    //TODO: GET THE SAMPLES!!
 
     return header;
   }
@@ -158,92 +246,6 @@ public final class VCFParser {
       }
       else
         vcf.setGeneName(hgvs);
-    }
-  }
-
-  public void parse(File file, ProgressListener progress) throws FileNotFoundException, IOException, InvalidFormatException {
-    if (!file.exists())
-      throw new FileNotFoundException("File does not exists: " + file.getAbsolutePath());
-
-    final CountingInputStream cntIs = new CountingInputStream(new FileInputStream(file));
-    final BufferedReader reader = new BufferedReader(new InputStreamReader(cntIs));
-
-    final List<String> rawHeader = new ArrayList<String>();
-    try {
-      String line;
-
-      if ((line = reader.readLine()) == null || !line.startsWith("##fileformat=VCF"))
-        throw new InvalidFormatException("Cannot read the file, fileformat not found");
-
-      final String version = line.substring("##fileformat=VCF".length()).trim();
-      rawHeader.add(line);
-
-      while ((line = reader.readLine()) != null && (line.startsWith("##") || line.isEmpty()))
-        rawHeader.add(line);
-
-      if (line == null)
-        throw new InvalidFormatException("File is empty");
-
-      rawHeader.add(line);
-      Hashtable<String, Integer> header = parseHeader(line);
-
-      if (!header.containsKey(CHROM) || !header.containsKey(POS) || !header.containsKey(ID) ||
-          !header.containsKey(REF) || !header.containsKey(ALT) || !header.containsKey(QUAL) ||
-          !header.containsKey(FILTER) || !header.containsKey(INFO))
-        throw new InvalidFormatException("Header does not contain all necessary fields");
-
-      this.reader.setUp(version);
-
-      long length = file.length();
-
-      if (progress != null)
-        progress.start(file.getAbsolutePath(), length);
-
-      long stime = (new Date()).getTime();
-      long seconds = 0;
-      int percent  = -1;
-      while ((line = reader.readLine()) != null) {
-        if (line.isEmpty() || line.startsWith("#"))
-          continue;
-
-        final String elements[] = line.split(DELIMITER);
-        if (elements.length != header.size())
-          throw new InvalidFormatException("Element does not have the same header size");
-
-        elements[header.get(CHROM)] = elements[header.get(CHROM)].replaceFirst("chr", "");
-
-        final Short chromosome = elements[header.get(CHROM)].equals("X") ? 23 : elements[header.get(CHROM)].equals("Y") ? 24 :
-          elements[header.get(CHROM)].equals("M") ? 25 : Short.parseShort(elements[header.get(CHROM)]);
-
-        final Integer position = Integer.parseInt(elements[header.get(POS)]);
-        final String  ref      = elements[header.get(REF)];
-        final String  alt      = elements[header.get(ALT)];
-        final String  info     = elements[header.get(INFO)];
-        final String  format   = header.containsKey(FORMAT) ? elements[header.get(FORMAT)] : null;
-        final String  sample   = (format != null && elements.length >= header.get(FORMAT) + 1) ? elements[header.get(FORMAT) + 1] : null;
-
-        readElement(chromosome, position, ref, alt, info, format, sample);
-
-        float readLength = cntIs.getByteCount();
-        int newPercent = (int) ((readLength / length) * 100);
-
-        long diff = (new Date()).getTime() - stime;
-        long elapsedSeconds = diff / 1000;
-
-        if (percent != newPercent || seconds < elapsedSeconds) {
-          seconds = elapsedSeconds;
-          percent = newPercent;
-          if (progress != null)
-            progress.progress(file.getAbsolutePath(), percent, seconds, (long) readLength);
-        }
-      }
-
-      if (progress != null)
-        progress.end(file.getAbsolutePath());
-    }
-    finally {
-      reader.close();
-      this.reader.end(rawHeader);
     }
   }
 }

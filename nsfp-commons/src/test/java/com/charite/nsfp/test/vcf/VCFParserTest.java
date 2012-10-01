@@ -18,7 +18,7 @@ import com.charite.exception.ParserException;
 import com.charite.progress.ProgressListener;
 import com.charite.snv.model.SNV;
 import com.charite.vcf.parser.VCFParser;
-import com.charite.vcf.reader.VCFReader;
+import com.charite.vcf.parser.VCFReader;
 
 //TODO: Test the ProgressListener
 public class VCFParserTest {
@@ -55,7 +55,7 @@ public class VCFParserTest {
       }
 
       @Override 
-      public void end(List<String> header) {
+      public void end(List<String> header, List<String> samples) {
         functionCalled[1] = true;
         
         final List<String> expectedHeader = new ArrayList<String>() {
@@ -125,7 +125,7 @@ public class VCFParserTest {
       }
       
       @Override
-      public void end(List<String> header) {
+      public void end(List<String> header, List<String> samples) {
       }
     });
     
@@ -184,7 +184,7 @@ public class VCFParserTest {
       }
       
       @Override
-      public void end(List<String> header) {
+      public void end(List<String> header, List<String> samples) {
       }
     });
     

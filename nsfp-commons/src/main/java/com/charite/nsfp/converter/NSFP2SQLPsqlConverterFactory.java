@@ -11,7 +11,7 @@ import com.charite.exception.ConverterException;
 import com.charite.nsfp.model.Gene;
 import com.charite.nsfp.model.Variant;
 import com.charite.nsfp.parser.NSFPParser;
-import com.charite.nsfp.reader.NSFPReader;
+import com.charite.nsfp.parser.NSFPReader;
 import com.charite.progress.ProgressListener;
 import com.charite.thirdpartydb.ThirdPartyConverter;
 import com.charite.thirdpartydb.ThirdPartyConverterFactory;
@@ -124,7 +124,7 @@ class NSFP2PsqlConverter implements NSFPReader, ThirdPartyConverter {
     
     //TODO: MUST CHECK IF IT HAS NULL ELEMENTS!!
     String str = (new StringBuilder())
-      .append(gene.getId()).append("|") // TODO: HOW TO HANDLE THE ID
+      .append(gene.getId()).append("|")
       .append(gene.getGeneName()).append("|")
       .append(gene.getUniprotAcc()).append("|")
       .append(gene.getUniprotId()).append("|")
@@ -196,6 +196,7 @@ class NSFP2PsqlConverter implements NSFPReader, ThirdPartyConverter {
       throw new ConverterException("Problems to run the PSQL program", e);
     }
     catch (InterruptedException e) {
+      throw new ConverterException("Problems to wait the psl", e);
     }
   }
 
@@ -227,6 +228,7 @@ class NSFP2PsqlConverter implements NSFPReader, ThirdPartyConverter {
       throw new ConverterException("Problems to run the PSQL program", e);
     }
     catch (InterruptedException e) {
+      throw new ConverterException("Problems to wait the psl", e);
     }
   }
 }

@@ -3,7 +3,8 @@ package com.charite.snv.model;
 import com.charite.enums.Genotype;
 import com.charite.enums.VariantType;
 import com.charite.esp.model.ESP;
-import com.charite.nsfp.model.Variant;
+import com.charite.filter.MapReduceKey;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
  * SNV model.
@@ -13,7 +14,8 @@ import com.charite.nsfp.model.Variant;
  * @author Daniele Yumi Sunaga de Oliveira
  *
  */
-public class SNV {
+@XStreamAlias("SNV")
+public class SNV implements MapReduceKey {
   private Short chromosome        = null;
   private Integer position        = null;
   private String ref              = null;
@@ -26,8 +28,9 @@ public class SNV {
   private String exon             = null;
   private String cdsMutation      = null;
   private String aaMutation       = null;
+  
+  @XStreamAlias("ESP")
   private ESP esp                 = null;
-  private Variant variant         = null;
 
   public SNV() {
   }
@@ -160,14 +163,6 @@ public class SNV {
     this.esp = esp;
   }
 
-  public Variant getVariant() {
-    return variant;
-  }
-
-  public void setVariant(Variant variant) {
-    this.variant = variant;
-  }
-
   boolean isNonPathogenic() {
     return isPredictedNonMissensePath();
   }
@@ -205,8 +200,7 @@ public class SNV {
            .append("Exon                           : ").append(exon).append("\n")
            .append("CDS Mutation                   : ").append(cdsMutation).append("\n")
            .append("AA Mutations                   : ").append(aaMutation).append("\n")
-           .append("Is Predicted non missense Path : ").append(isPredictedNonMissensePath()).append("\n")
-           .append(esp).append("\n").append(variant).append("\n");
+           .append("Is Predicted non missense Path : ").append(isPredictedNonMissensePath()).append("\n");
 
     return builder.toString();
   }
@@ -230,7 +224,6 @@ public class SNV {
     hash = 31 * hash + hash(cdsMutation);
     hash = 31 * hash + hash(aaMutation);
     hash = 31 * hash + hash(esp);
-    hash = 31 * hash + hash(variant);
 
     return hash;
   }
@@ -246,9 +239,14 @@ public class SNV {
       return (equal(chromosome, c.chromosome) && equal(position, c.position) && equal(ref, c.ref) && equal(alt, c.alt)
         && equal(variantType, c.variantType) && equal(genotype, c.genotype) && equal(genotypeQuality, c.genotypeQuality)
         && equal(geneName, c.geneName) && equal(refSeqId, c.refSeqId) && equal(exon, c.exon) && equal(cdsMutation, c.cdsMutation)
-        && equal(aaMutation, c.aaMutation) && equal(esp, c.esp) && equal(variant, c.variant));
+        && equal(aaMutation, c.aaMutation) && equal(esp, c.esp));
     }
 
     return false;
+  }
+
+  @Override
+  public String key() {
+    return null;
   }
 }

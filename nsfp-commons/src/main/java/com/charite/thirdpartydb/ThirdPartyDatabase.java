@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -87,7 +88,7 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
   private long startTime = 0;
   private String finalName = "";
   private long allFilesSize = 0;
-  private HashMap<String, Long> installFiles = new HashMap<String, Long>();
+  private HashMap<String, Long> installFiles = new HashMap<>();
 
   private Throwable myException = null;
   private final ExecutorService executor;
@@ -206,17 +207,25 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
     File directory = new File(cacheLocation, new StringBuilder().append("downloaddir_").append(UUID.randomUUID()).toString());
     directory.mkdirs();
 
-    myException = null;
     installFiles.clear();
+    myException  = null;
     allFilesSize = 0;
     startTime    = (new Date()).getTime();
     finalName    = finalFile;
 
-    try {
-      if (extractCompressedFile(finalFile, directory, false)) {
-        listener.start("Extracting: " + finalFile, allFilesSize);
-        extractCompressedFile(finalFile, directory, true);
+    listener.start("Extracting: " + finalFile, allFilesSize);
+
+    final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    scheduler.scheduleAtFixedRate(new Runnable() {
+      @Override
+      public void run() {
+        progress(null, 0, 0, 0);
       }
+    }, 0, 1, TimeUnit.SECONDS);
+
+    try {
+      if (extractCompressedFile(finalFile, directory, false))
+        extractCompressedFile(finalFile, directory, true);
       else
         return false;
 
@@ -228,6 +237,7 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
       throw new ConverterException("Problems with to extract the database", e);
     }
     finally {
+      scheduler.shutdownNow();
       (new File(finalFile)).delete();
       try {
         delete(directory);
@@ -241,7 +251,7 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
       throw new ConverterException("Problems with Executor", myException);
     }
 
-      return true;
+    return true;
   }
 
   /**
@@ -269,16 +279,19 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
     try {
       lock.lock();
 
-      installFiles.put(uid, currentDataSize);
+      if (uid != null) {
+        installFiles.put(uid, currentDataSize);
+      }
+      else {
+        long dataSize = 0;
+        for (Long s : installFiles.values())
+          dataSize += s;
 
-      long dataSize = 0;
-      for (Long s : installFiles.values())
-        dataSize += s;
-
-      long diff = (new Date()).getTime() - startTime;
-      seconds   = diff / 1000;
-      percent = (int) (((float) dataSize / allFilesSize) * 100);
-      listener.progress("Extracting: " + finalName, percent, seconds, dataSize);
+        long diff = (new Date()).getTime() - startTime;
+        seconds   = diff / 1000;
+        percent = (int) (((float) dataSize / allFilesSize) * 100);
+        listener.progress("Extracting: " + finalName, percent, seconds, dataSize);
+      }
     }
     finally {
       lock.unlock();
@@ -327,19 +340,15 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
   }
 
   private boolean extractCompressedFile(final String file, final File directory, boolean extractFiles) throws IOException {
-    InputStream is = null;
-    try {
-      is = new FileInputStream(new File(file));
-
+    
+    try (InputStream is = new FileInputStream(new File(file))) {
       ArchiveInputStream unarchiver = null;
       try {
         if (file.endsWith(".tar.gz")) {
-          GZIPInputStream gis;
-          gis = new GZIPInputStream(is);
-
-          unarchiver = new TarArchiveInputStream(gis);
+          GZIPInputStream gis = new GZIPInputStream(is);
+          unarchiver          = new TarArchiveInputStream(gis);
         }
-        else if (file.endsWith("zip"))
+        else if (file.endsWith(".zip"))
           unarchiver = new ZipArchiveInputStream(is);
         else
           return false;
@@ -349,18 +358,18 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
           if (entry.getName().matches(fileNameRegex)) {
             final File outputFile = new File(directory, entry.getName());
             if (extractFiles) {
-              final OutputStream outputFileStream = new FileOutputStream(outputFile); 
-              IOUtils.copy(unarchiver, outputFileStream);
-              outputFileStream.close();
-              final ThirdPartyDatabase dbThis = this;
+              try (final OutputStream outputFileStream = new FileOutputStream(outputFile)) {
+                IOUtils.copy(unarchiver, outputFileStream);
 
-              final ThirdPartyConverter converter = converterFactory.getConverter();
-              executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                  converter.convert(outputFile, dbThis);
-                }
-              });
+                final ThirdPartyDatabase dbThis     = this;
+                final ThirdPartyConverter converter = converterFactory.getConverter();
+                executor.execute(new Runnable() {
+                  @Override
+                  public void run() {
+                    converter.convert(outputFile, dbThis);
+                  }
+                });
+              }
             }
             else {
               allFilesSize += entry.getSize();
@@ -374,17 +383,15 @@ public final class ThirdPartyDatabase implements ProgressListener, UncaughtExcep
           try {
             while (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {}
           }
-          catch (InterruptedException e) {}
+          catch (InterruptedException e) {
+            throw new ConverterException("Problems to extract files.", e);
+          }
         }
       }
       finally {
         if (unarchiver != null)
           unarchiver.close();
       }
-    }
-    finally {
-      if (is != null)
-        is.close();
     }
     
     return true;

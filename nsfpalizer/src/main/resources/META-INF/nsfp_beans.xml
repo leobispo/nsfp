@@ -1,7 +1,7 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
                         http://www.springframework.org/schema/beans/spring-beans.xsd
                         http://www.springframework.org/schema/aop
@@ -9,7 +9,9 @@
                         http://www.springframework.org/schema/tx
                         http://www.springframework.org/schema/tx/spring-tx.xsd
                         http://www.springframework.org/schema/context
-                        http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/util
+                        http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<bean id="ESPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
 		<constructor-arg>
@@ -29,9 +31,10 @@
 		</property>
 	</bean>
 
+    <bean id="NSFPManager" class="com.charite.nsfp.NSFPManager"></bean>
 	<bean id="NSFPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
 		<constructor-arg>
-			<value>8</value>
+			<value>1</value>
 		</constructor-arg>
 		<property name="fileNameRegex">
 			<value>dbNSFP2.0b3_variant.chr.*</value>
@@ -116,4 +119,37 @@
 		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
 		
 	<context:component-scan base-package="miscellaneous.property_placeholder" />
+	
+	<bean id="SNVExecutor" class="com.charite.filter.FilterStopWhenFailExecutor">
+      <property name="filters"><ref bean="SNVFilters" /></property>
+      <property name="nextConsumerChain"><ref bean="NSFPExecutor" /></property>
+	</bean>
+	
+	<bean id="NSFPExecutor" class="com.charite.filter.FilterStopWhenMatchExecutor">
+	  <property name="filters"><ref bean="NSFPFilters" /></property>
+	</bean>
+	
+    <bean id="QualityFilter" class="com.charite.snv.filter.QualityFilter"/>
+    <bean id="SNVThousandGenomeFilter" class="com.charite.snv.filter.ThousandGenomeFilter"/>
+    <bean id="PathogenicityFilter" class="com.charite.nsfp.filter.PathogenicityFilter"/>
+    <bean id="NonPathogenicityFilter" class="com.charite.nsfp.filter.NonPathogenicityFilter"/>
+    <bean id="NSFPThousandGenomeFilter" class="com.charite.nsfp.filter.ThousandGenomeFilter"/>
+
+    <util:map id="AvailableSNVFilters">
+      <entry key="Q"><ref bean="QualityFilter"/></entry>
+      <entry key="TG"><ref bean="SNVThousandGenomeFilter"/></entry>
+    </util:map>
+    
+    <util:map id="AvailableNSFPFilters">
+      <entry key="path"><ref bean="PathogenicityFilter"/></entry>
+      <entry key="nonpath"><ref bean="NonPathogenicityFilter"/></entry>
+      <entry key="TG"><ref bean="NSFPThousandGenomeFilter"/></entry>
+    </util:map>
+    
+    <bean id="AsyncTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
+      <property name="concurrencyLimit" value="4"/>
+      <property name="threadNamePrefix" value="AsyncThread-"/>
+      <property name="daemon" value="true"/>
+    </bean>
+
 </beans> 

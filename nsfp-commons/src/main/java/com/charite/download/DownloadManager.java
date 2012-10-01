@@ -75,7 +75,7 @@ public final class DownloadManager<T> {
       throw new DownloadException("Invalid maximum parallel downloads (should be between 1 and 10): " + maxInParallel);
 
     this.maxInParallel = maxInParallel;
-    future = new AtomicReference<DownloadFutureImpl>(new DownloadFutureImpl(maxInParallel));
+    future = new AtomicReference<>(new DownloadFutureImpl(maxInParallel));
   }
 
   /**
@@ -105,7 +105,7 @@ public final class DownloadManager<T> {
   private final class DownloadFutureImpl extends Thread implements DownloadFuture<T> {
     private boolean error                           = false;
     private boolean done                            = false;
-    private final List<DownloadResult<T>> listeners = new ArrayList<DownloadResult<T>>();
+    private final List<DownloadResult<T>> listeners = new ArrayList<>();
     private final ExecutorService executor;
 
     public DownloadFutureImpl(final int maxInParallel) {
@@ -118,7 +118,9 @@ public final class DownloadManager<T> {
         if (!done)
           sem.acquire();
       }
-      catch (InterruptedException e) {}
+      catch (InterruptedException e) {
+        throw new DownloadException("Probems in get() method", e);
+      }
 
       return listeners;
     }
@@ -145,7 +147,9 @@ public final class DownloadManager<T> {
       try {
         while (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {}
       }
-      catch (InterruptedException e) {}
+      catch (InterruptedException e) {
+        throw new DownloadException("Problems to wait workers to finshish their tasks", e);
+      }
 
       sem.release();
       done = true;
@@ -217,40 +221,39 @@ public final class DownloadManager<T> {
             file.delete();
 
           fileName = file.getAbsolutePath();
-          FileOutputStream fos = new FileOutputStream(file);
-          InputStream is       = connection.getInputStream();
+          try (FileOutputStream fos = new FileOutputStream(file);
+              InputStream is        = connection.getInputStream()) {
 
-          final byte[] buffer = new byte[8192];
-          int read = 0;
+            final byte[] buffer = new byte[8192];
+            int read = 0;
 
-          long stime = (new Date()).getTime();
-          long seconds = 0;
-          int percent  = -1;
+            long stime = (new Date()).getTime();
+            long seconds = 0;
+            int percent  = -1;
 
-          float readLength = 0;
+            float readLength = 0;
 
-          if (listener != null)
-            listener.start(url.toString(), length);
-          while ((read = is.read(buffer)) > 0) {
-            fos.write(buffer, 0, read);
-            readLength += read;
-            int newPercent = (int) ((readLength / length) * 100);
+            if (listener != null)
+              listener.start(url.toString(), length);
+            while ((read = is.read(buffer)) > 0) {
+              fos.write(buffer, 0, read);
+              readLength += read;
+              int newPercent = (int) ((readLength / length) * 100);
 
-            long diff = (new Date()).getTime() - stime;
-            long elapsedSeconds = diff / 1000;
+              long diff = (new Date()).getTime() - stime;
+              long elapsedSeconds = diff / 1000;
 
-            if (percent != newPercent || seconds < elapsedSeconds) {
-              seconds = elapsedSeconds;
-              percent = newPercent;
-              if (listener != null)
-                listener.progress(url.toString(), percent, seconds, (long) readLength);
+              if (percent != newPercent || seconds < elapsedSeconds) {
+                seconds = elapsedSeconds;
+                percent = newPercent;
+                if (listener != null)
+                  listener.progress(url.toString(), percent, seconds, (long) readLength);
+              }
             }
-          }
 
-          fos.close();
-          is.close();
-          if (listener != null)
-            listener.end(url.toString());
+            if (listener != null)
+              listener.end(url.toString());
+          }
         }
       } catch (IOException e) {
         if (listener != null)

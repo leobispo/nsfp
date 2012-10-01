@@ -17,7 +17,7 @@ import com.charite.model.ChromosomeId;
 import com.charite.nsfp.model.Gene;
 import com.charite.nsfp.model.Variant;
 import com.charite.nsfp.parser.NSFPParser;
-import com.charite.nsfp.reader.NSFPReader;
+import com.charite.nsfp.parser.NSFPReader;
 import com.charite.progress.ProgressListener;
 
 public class NSFPParserTest {
