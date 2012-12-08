@@ -163,7 +163,7 @@ public class SNV implements MapReduceKey {
     this.esp = esp;
   }
 
-  boolean isNonPathogenic() {
+  public boolean isNonPathogenic() {
     return isPredictedNonMissensePath();
   }
 

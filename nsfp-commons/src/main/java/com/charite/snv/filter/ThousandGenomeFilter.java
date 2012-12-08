@@ -15,13 +15,16 @@ public class ThousandGenomeFilter extends Filter<SNV, SNV> {
   @Override
   public String getFilterName() {
     return "SNV Thousand Genomes Filter";
-    
   }
 
   @Override
   public SNV filter(final SNV snv, Object... arguments) {
     if (snv.getESP() == null)
       snv.setESP(dao.findById(new ChromosomeId(snv.getChromosome(), snv.getPosition(), snv.getRef().charAt(0), snv.getAlt().charAt(0))));
+
+    if (snv.getESP().getFrequency() < -0.5 || snv.getESP().getFrequency() > threshold)
+      return null;
+
     return snv;
   }
 

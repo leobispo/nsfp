@@ -44,24 +44,28 @@ public class NSFPResultDocumentTest{
     //mapping.processAnnotations(QualitySNVFilter.class);
     NSFPResultDocument document = new NSFPResultDocument();
 
-    document.addNSFP(new NSFP(vcfList.get(0)));
-    document.addNSFP(new NSFP(vcfList.get(1)));
-    document.addNSFP(new NSFP(vcfList.get(2)));
-    document.addNSFP(new NSFP(vcfList.get(3)));
-    document.addNSFP(new NSFP(vcfList.get(4)));
+    List<NSFP> nsfps = new ArrayList<>();
+    nsfps.add(new NSFP(vcfList.get(0)));
+    nsfps.add(new NSFP(vcfList.get(1)));
+    nsfps.add(new NSFP(vcfList.get(2)));
+    nsfps.add(new NSFP(vcfList.get(3)));
+    nsfps.add(new NSFP(vcfList.get(4)));
+    nsfps.add(new NSFP(vcfList.get(5)));
 
-    List<String> samples = new ArrayList<String>();
+    List<String> samples = new ArrayList<>();
     samples.add("Sample1");
     samples.add("Sample2");
     samples.add("Sample3");
     samples.add("Sample4");
     
-    List<Filter<SNV, SNV>> filters = new ArrayList<Filter<SNV, SNV>>();
+    List<Filter<SNV, SNV>> filters = new ArrayList<>();
     filters.add(new QualityFilter());
     filters.add(new QualityFilter());
     filters.add(new QualityFilter());
+    
     document.setSnvFilters(filters);
     document.setSamples(samples);
+    //document.setNsfpFilters(nsfpFilters)
     
     String xsl = "<?xml version=\"1.0\"?>\n"
 +                "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n"

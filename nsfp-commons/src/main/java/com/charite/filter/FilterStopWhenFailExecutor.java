@@ -21,29 +21,18 @@ public class FilterStopWhenFailExecutor<IN, OUT extends MapReduceKey> implements
   AsyncTaskExecutor executor;
 
   @Override
-  public void consume(final IN in) {
-    final FilterConsumer<OUT> nextConsumerChain   = this.nextConsumerChain;
-    final FilterMapReduce<OUT> nextMapReduceChain = this.nextMapReduceChain;
-    Future<Boolean> future = executor.submit(new Callable<Boolean>() {
-      @Override
-      public Boolean call() {
-        OUT out = null;
-        for (Filter<IN, OUT> filter : filters) {
-          out = filter.processFilter(in);
-          if (out == null)
-            return false;
+  public void consume(final IN in, Method method) {
+    if (method == Method.Async) {
+      Future<Boolean> future = executor.submit(new Callable<Boolean>() {
+        @Override
+        public Boolean call() {
+          return execute(in);
         }
-        
-        if (nextConsumerChain != null)
-          nextConsumerChain.consume(out);
-
-        if (nextMapReduceChain != null)
-          nextMapReduceChain.map(out.key(), out);
-        
-        return true;
-      }
-    });
-    futures.add(future);
+      });
+      futures.add(future);
+    }
+    else
+      execute(in);
   }
   
   public void shutdown() throws InterruptedException, ExecutionException {
@@ -67,5 +56,22 @@ public class FilterStopWhenFailExecutor<IN, OUT extends MapReduceKey> implements
 
   public void setNextMapReduceChain(FilterMapReduce<OUT> nextMapReduceChain) {
     this.nextMapReduceChain = nextMapReduceChain;
+  }
+
+  private boolean execute(final IN in) {
+    OUT out = null;
+    for (Filter<IN, OUT> filter : filters) {
+      out = filter.processFilter(in);
+      if (out == null)
+        return false;
+    }
+  
+    if (nextConsumerChain != null)
+      nextConsumerChain.consume(out, Method.Sync);
+
+    if (nextMapReduceChain != null)
+      nextMapReduceChain.map(out.key(), out);
+  
+    return true;
   }
 }

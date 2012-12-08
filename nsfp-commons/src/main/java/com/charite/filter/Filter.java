@@ -9,6 +9,7 @@ public abstract class Filter<IN, OUT> {
   private final String description           = getDescription();
   private final AtomicLong elementsProcessed = new AtomicLong();
   private final AtomicLong  elementsFiltered = new AtomicLong();
+  private int position                       = 0;
   
   public abstract String getFilterName();
   
@@ -22,6 +23,13 @@ public abstract class Filter<IN, OUT> {
     return elementsFiltered.get();
   }
   
+  public final void setPosition(int position) {
+    this.position = position;
+  }
+  
+  public final int getPosition() {
+    return position;
+  }
   final OUT processFilter(final IN in, Object... arguments) {
     elementsProcessed.incrementAndGet();
     OUT out = filter(in, arguments);
@@ -34,4 +42,6 @@ public abstract class Filter<IN, OUT> {
   
   public abstract OUT filter(final IN in, Object... arguments);
   public abstract boolean setParameter(final String parameter);
+  
+  //TODO: MUST IMPLEMENT THE EQUALS!!!
 }

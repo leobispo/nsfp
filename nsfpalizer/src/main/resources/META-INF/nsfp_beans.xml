@@ -1,8 +1,9 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+  xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:util="http://www.springframework.org/schema/util"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
                         http://www.springframework.org/schema/beans/spring-beans.xsd
                         http://www.springframework.org/schema/aop
                         http://www.springframework.org/schema/aop/spring-aop.xsd
@@ -13,143 +14,188 @@
                         http://www.springframework.org/schema/util
                         http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<bean id="ESPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
-		<constructor-arg>
-			<value>1</value>
-		</constructor-arg>
-		<property name="fileNameRegex">
-			<value>ESP6500\.chr\w+\.snps.txt</value>
-		</property>
-		<property name="downloadUrl">
-			<value>${database.esp.url}</value>
-		</property>
-		<property name="databaseDao">
-			<ref local="ESPDao" />
-		</property>
-		<property name="converterFactory">
-			<ref local="ESPConverterFactory" />
-		</property>
-	</bean>
+  <bean id="ESPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
+    <constructor-arg>
+      <value>1</value>
+    </constructor-arg>
+    <property name="fileNameRegex">
+      <value>ESP6500\.chr\w+\.snps.txt</value>
+    </property>
+    <property name="downloadUrl">
+      <value>${database.esp.url}</value>
+    </property>
+    <property name="databaseDao">
+      <ref local="ESPDao" />
+    </property>
+    <property name="converterFactory">
+      <ref local="ESPConverterFactory" />
+    </property>
+  </bean>
 
-    <bean id="NSFPManager" class="com.charite.nsfp.NSFPManager"></bean>
-	<bean id="NSFPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
-		<constructor-arg>
-			<value>1</value>
-		</constructor-arg>
-		<property name="fileNameRegex">
-			<value>dbNSFP2.0b3_variant.chr.*</value>
-		</property>
-		<property name="downloadUrl">
-			<value>${database.nsfp.url}</value>
-		</property>
-		<property name="databaseDao">
-			<ref local="NSFPDao" />
-		</property>
-		<property name="converterFactory">
-			<ref local="NSFPConverterFactory" />
-		</property>
-	</bean>
-	
-	<bean id="DownloadManager" class="com.charite.download.DownloadManager"
-		scope="singleton">
-		<constructor-arg>
-			<value>5</value>
-		</constructor-arg>
-	</bean>
-	
-	<bean id="ThirdPartyDatabaseManager" class="com.charite.thirdpartydb.ThirdPartyDatabaseManager">
-		<property name="databases">
-			<list>
-				<ref local="ESPDatabase" />
-				<ref local="NSFPDatabase" />
-			</list>
-		</property>
-	</bean>
+  <bean id="NSFPManager" class="com.charite.nsfp.NSFPManager">
+    <property name="filters">
+      <ref bean="InheritanceFilters" />
+    </property>
+  </bean>
+  <bean id="NSFPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
+    <constructor-arg>
+      <value>1</value>
+    </constructor-arg>
+    <property name="fileNameRegex">
+      <value>dbNSFP2.0b3_variant.chr.*</value>
+    </property>
+    <property name="downloadUrl">
+      <value>${database.nsfp.url}</value>
+    </property>
+    <property name="databaseDao">
+      <ref local="NSFPDao" />
+    </property>
+    <property name="converterFactory">
+      <ref local="NSFPConverterFactory" />
+    </property>
+  </bean>
 
-	<bean id="DownloadListener"
-		class="com.charite.nsfp.NSFPAlizerDownloadListener"
-		scope="singleton" />
+  <bean id="DownloadManager" class="com.charite.download.DownloadManager"
+    scope="singleton">
+    <constructor-arg>
+      <value>5</value>
+    </constructor-arg>
+  </bean>
 
-	<bean id="ESPConverterFactory" class="com.charite.esp.converter.ESP2SQLPsqlConverterFactory" />
-	<bean id="NSFPConverterFactory" class="com.charite.nsfp.converter.NSFP2SQLPsqlConverterFactory" />
-	
-	<bean id="ESPDao" class="com.charite.esp.dao.ESPDaoImpl" />
-	<bean id="NSFPDao" class="com.charite.nsfp.dao.NSFPDaoImpl" />
+  <bean id="ThirdPartyDatabaseManager" class="com.charite.thirdpartydb.ThirdPartyDatabaseManager">
+    <property name="databases">
+      <list>
+        <ref local="ESPDatabase" />
+        <ref local="NSFPDatabase" />
+      </list>
+    </property>
+  </bean>
 
-	<bean id="entityManagerFactory"
-		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-		<property name="persistenceUnitName" value="com.charite.nsfp.jpa" />
-		<property name="dataSource" ref="dataSource" />
-		<property name="jpaProperties">
-			<props>
-				<prop key="hibernate.hbm2ddl.auto">update</prop>
-			</props>
-		</property>
-		
-	<property name="jpaVendorAdapter">
-		<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-			<property name="showSql" value="false" />
-			<property name="generateDdl" value="false" />
-			<property name="databasePlatform" value="org.hibernate.dialect.PostgreSQLDialect" />
-		</bean>
-	</property>
-	</bean>
+  <bean id="DownloadListener" class="com.charite.nsfp.NSFPAlizerDownloadListener"
+    scope="singleton" />
 
-	<bean id="dataSource"
-		class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass" value="org.postgresql.Driver" />
-		<property name="jdbcUrl" value="jdbc:postgresql://${database.hostname}/${database.name}" />
-		<property name="user" value="${database.user}" />
-		<property name="password" value="${database.password}" />
-		
-		<property name="acquireIncrement" value="1" />
-        <property name="minPoolSize" value="10" />
-        <property name="maxPoolSize" value="100" />
-        <property name="maxIdleTime" value="100" />
-	</bean>
+  <bean id="ESPConverterFactory" class="com.charite.esp.converter.ESP2SQLPsqlConverterFactory" />
+  <bean id="NSFPConverterFactory" class="com.charite.nsfp.converter.NSFP2SQLPsqlConverterFactory" />
 
-	<tx:annotation-driven />
+  <bean id="ESPDao" class="com.charite.esp.dao.ESPDaoImpl" />
+  <bean id="NSFPDao" class="com.charite.nsfp.dao.NSFPDaoImpl" />
 
-	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-		<property name="entityManagerFactory" ref="entityManagerFactory" />
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-	
-	<bean id="persistenceAnnotation"
-		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
-		
-	<context:component-scan base-package="miscellaneous.property_placeholder" />
-	
-	<bean id="SNVExecutor" class="com.charite.filter.FilterStopWhenFailExecutor">
-      <property name="filters"><ref bean="SNVFilters" /></property>
-      <property name="nextConsumerChain"><ref bean="NSFPExecutor" /></property>
-	</bean>
-	
-	<bean id="NSFPExecutor" class="com.charite.filter.FilterStopWhenMatchExecutor">
-	  <property name="filters"><ref bean="NSFPFilters" /></property>
-	</bean>
-	
-    <bean id="QualityFilter" class="com.charite.snv.filter.QualityFilter"/>
-    <bean id="SNVThousandGenomeFilter" class="com.charite.snv.filter.ThousandGenomeFilter"/>
-    <bean id="PathogenicityFilter" class="com.charite.nsfp.filter.PathogenicityFilter"/>
-    <bean id="NonPathogenicityFilter" class="com.charite.nsfp.filter.NonPathogenicityFilter"/>
-    <bean id="NSFPThousandGenomeFilter" class="com.charite.nsfp.filter.ThousandGenomeFilter"/>
+  <bean id="entityManagerFactory"
+    class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <property name="persistenceUnitName" value="com.charite.nsfp.jpa" />
+    <property name="dataSource" ref="dataSource" />
+    <property name="jpaProperties">
+      <props>
+        <prop key="hibernate.hbm2ddl.auto">update</prop>
+      </props>
+    </property>
 
-    <util:map id="AvailableSNVFilters">
-      <entry key="Q"><ref bean="QualityFilter"/></entry>
-      <entry key="TG"><ref bean="SNVThousandGenomeFilter"/></entry>
-    </util:map>
-    
-    <util:map id="AvailableNSFPFilters">
-      <entry key="path"><ref bean="PathogenicityFilter"/></entry>
-      <entry key="nonpath"><ref bean="NonPathogenicityFilter"/></entry>
-      <entry key="TG"><ref bean="NSFPThousandGenomeFilter"/></entry>
-    </util:map>
-    
-    <bean id="AsyncTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
-      <property name="concurrencyLimit" value="4"/>
-      <property name="threadNamePrefix" value="AsyncThread-"/>
-      <property name="daemon" value="true"/>
-    </bean>
+    <property name="jpaVendorAdapter">
+      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="showSql" value="false" />
+        <property name="generateDdl" value="false" />
+        <property name="databasePlatform" value="org.hibernate.dialect.PostgreSQLDialect" />
+      </bean>
+    </property>
+  </bean>
 
+  <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+    destroy-method="close">
+    <property name="driverClass" value="org.postgresql.Driver" />
+    <property name="jdbcUrl"
+      value="jdbc:postgresql://${database.hostname}/${database.name}" />
+    <property name="user" value="${database.user}" />
+    <property name="password" value="${database.password}" />
+
+    <property name="acquireIncrement" value="1" />
+    <property name="minPoolSize" value="10" />
+    <property name="maxPoolSize" value="100" />
+    <property name="maxIdleTime" value="100" />
+  </bean>
+
+  <tx:annotation-driven />
+
+  <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+    <property name="entityManagerFactory" ref="entityManagerFactory" />
+    <property name="dataSource" ref="dataSource" />
+  </bean>
+
+  <bean id="persistenceAnnotation"
+    class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+
+  <context:component-scan base-package="miscellaneous.property_placeholder" />
+
+  <bean id="MapReducer" class="com.charite.filter.FilterMapReduce">
+    <property name="reducer">
+      <ref bean="NSFPManager" />
+    </property>
+  </bean>
+
+  <bean id="SNVExecutor" class="com.charite.filter.FilterStopWhenFailExecutor">
+    <property name="filters">
+      <ref bean="SNVFilters" />
+    </property>
+    <property name="nextConsumerChain">
+      <ref bean="NSFPExecutor" />
+    </property>
+  </bean>
+
+  <bean id="NSFPExecutor" class="com.charite.filter.FilterStopWhenMatchExecutor">
+    <property name="filters">
+      <ref bean="NSFPFilters" />
+    </property>
+    <property name="nextMapReduceChain">
+      <ref bean="MapReducer" />
+    </property>
+  </bean>
+
+  <bean id="QualityFilter" class="com.charite.snv.filter.QualityFilter" />
+  <bean id="SNVThousandGenomeFilter" class="com.charite.snv.filter.ThousandGenomeFilter" />
+  <bean id="PathogenicityFilter" class="com.charite.nsfp.filter.PathogenicityFilter" />
+  <bean id="NSFPThousandGenomeFilter" class="com.charite.nsfp.filter.ThousandGenomeFilter" />
+  
+  <bean id="AutosomalRecessiveFilter" class="com.charite.nsfp.filter.inheritance.AutosomalRecessiveFilter" />
+  <bean id="AutosomalDominantFilter" class="com.charite.nsfp.filter.inheritance.AutosomalDominantFilter" />
+  <bean id="XChromosomalFilter" class="com.charite.nsfp.filter.inheritance.XChromosomalFilter" />
+
+  <util:map id="AvailableSNVFilters" map-class="java.util.LinkedHashMap">
+    <entry key="Q">
+      <ref bean="QualityFilter" />
+    </entry>
+    <entry key="TG">
+      <ref bean="SNVThousandGenomeFilter" />
+    </entry>
+  </util:map>
+
+  <util:map id="AvailableNSFPFilters" map-class="java.util.LinkedHashMap">
+    <entry key="path">
+      <ref bean="PathogenicityFilter" />
+    </entry>
+    <entry key="TG">
+      <ref bean="NSFPThousandGenomeFilter" />
+    </entry>
+  </util:map>
+  
+  <util:map id="AvailableInheritanceFilters" map-class="java.util.LinkedHashMap">
+    <entry key="AR">
+      <ref bean="AutosomalRecessiveFilter" />
+    </entry>
+    <entry key="AD">
+      <ref bean="AutosomalDominantFilter" />
+    </entry>
+    <entry key="X">
+      <ref bean="XChromosomalFilter" />
+    </entry>
+  </util:map>
+  
+  <util:map id="AvailableOutputs" map-class="java.util.LinkedHashMap">
+    <entry key="htm"  value="META-INF/htmloutput.xsl" />
+    <entry key="html" value="META-INF/htmloutput.xsl" />
+  </util:map>
+  
+  <bean id="AsyncTaskExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
+    <property name="concurrencyLimit" value="20" />
+    <property name="threadNamePrefix" value="AsyncThread-" />
+    <property name="daemon" value="true" />
+  </bean>
 </beans> 

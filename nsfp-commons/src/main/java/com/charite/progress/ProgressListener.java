@@ -53,6 +53,7 @@ public interface ProgressListener {
    *
    * @param uid Unique identifier.
    * @param message Error message.
+   * 
    */
   void failed(final String uid, final String message);
 

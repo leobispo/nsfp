@@ -16,10 +16,13 @@ public class NSFP implements MapReduceKey {
   private final String geneName;
   private final Integer aaPos;
   private final Float sift;
+  private final Float mutTaster;
   private final Float polyphenHVAR;
   private final Float phyloP;
   private final Short thGenomesAC;
   private final Float thGenomesAF;
+  
+  private static int counter = 0;
   
   @XStreamOmitField
   private final SNV snv;
@@ -38,6 +41,7 @@ public class NSFP implements MapReduceKey {
     phyloP        = -2f;
     thGenomesAC   = -3;
     thGenomesAF   = -3f;
+    mutTaster     = -2f;
 
     this.snv = snv;
   }
@@ -56,6 +60,7 @@ public class NSFP implements MapReduceKey {
     phyloP        = variant.getPhyloP();
     thGenomesAC   = variant.getThGenomesAC();
     thGenomesAF   = variant.getThGenomesAF();
+    mutTaster     = variant.getMutTaster();
 
     this.snv = snv;
   }
@@ -112,14 +117,38 @@ public class NSFP implements MapReduceKey {
     return thGenomesAF;
   }
 
+  public Float getMutTaster() {
+    return mutTaster;
+  }
+  
   public SNV getSnv() {
     return snv;
   }
 
+  /**
+   * Does at least one of SIFT, polyphen2, or mutation taster predict
+   * pathogenicity?.
+   */
+  public boolean isPredictedPathogenic()
+  {
+    if (mutTaster != null && mutTaster > 0.94)
+      return true;
+    
+    if (sift != null && sift < 0.06 && sift > -1f)
+      return true;
+
+    if (polyphenHVAR != null && polyphenHVAR > 0.446)
+      return true;
+
+    return false;
+  }
+  
   @Override
   public String key() {
-    // TODO Auto-generated method stub
-    return null;
+    if (geneName != null && ! geneName.equals("unknown"))
+      return geneName;
+    
+    return ("unknown-" + (counter++));
   }
   
   //TODO: IMPLEMENT TO STRING AND ALL OTHER NEEDED METHODS

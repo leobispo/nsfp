@@ -177,7 +177,7 @@ public final class VCFParser {
 
     int i = 0;
     for (String f : formats) {
-      if (f.equals("GT")) {
+      if (f.equals("GT") && samples.length > i) {
         if (samples[i].equals("0/1"))
           vcf.setGenotype(Genotype.GENOTYPE_HETEROZYGOUS);
         else if (samples[i].equals("1/1"))
@@ -185,7 +185,7 @@ public final class VCFParser {
         else if (samples[i].equals("0/0"))
           vcf.setGenotype(Genotype.GENOTYPE_HOMOZYGOUS_REF);
       }
-      else if (f.equals("GQ"))
+      else if (f.equals("GQ") && samples.length > i)
         vcf.setGenotypeQuality(Integer.parseInt(samples[i]));
 
       ++i;
