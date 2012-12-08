@@ -3,7 +3,6 @@ package com.charite.nsfp;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.Writer;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -39,7 +38,9 @@ import com.thoughtworks.xstream.io.xml.TraxSource;
 public final class NSFPManager implements VCFReader, FilterReducer<NSFP> {
 
   private List<Filter<NSFP, Pair<Boolean, Boolean>>> filters = null;
-  
+  private List<Filter<SNV, SNV>> snvFilters                  = null;
+  private List<Filter<SNV, NSFP>> nsfpFilters                = null;
+
   @Autowired
   @Qualifier("DownloadListener")
   private ProgressListener listener = null;
@@ -53,6 +54,11 @@ public final class NSFPManager implements VCFReader, FilterReducer<NSFP> {
     if (executor == null)
       throw new NSFPManagerException("The filter executor is null");
 
+    document.setVcfFile(vcfFile.getName());
+    document.setInheritanceFilters(filters);
+    document.setSnvFilters(snvFilters);
+    document.setNsfpFilters(nsfpFilters);
+    
     final VCFParser parser = new VCFParser(this);
     
     try {
@@ -65,6 +71,7 @@ public final class NSFPManager implements VCFReader, FilterReducer<NSFP> {
       final TraxSource traxSource = new TraxSource(document, mapping);
       final Writer buffer = new FileWriter(output);
       
+      System.out.println(mapping.toXML(document));
       Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(this.getClass().getClassLoader().getResourceAsStream(xsl)));
       transformer.transform(traxSource, new StreamResult(buffer));
     }
@@ -120,5 +127,13 @@ public final class NSFPManager implements VCFReader, FilterReducer<NSFP> {
         return;
       }
     }
+  }
+  
+  public void setSnvFilters(List<Filter<SNV, SNV>> snvFilters) {
+    this.snvFilters = snvFilters;
+  }
+
+  public void setNsfpFilters(List<Filter<SNV, NSFP>> nsfpFilters) {
+    this.nsfpFilters = nsfpFilters;
   }
 }

@@ -4,7 +4,9 @@ import com.charite.enums.Genotype;
 import com.charite.filter.Filter;
 import com.charite.nsfp.model.NSFP;
 import com.charite.util.Pair;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+@XStreamAlias("Filter")
 public class AutosomalRecessiveFilter extends Filter<NSFP, Pair<Boolean, Boolean>> {
 
   @Override

@@ -6,9 +6,14 @@ import com.charite.esp.dao.ESPDao;
 import com.charite.filter.Filter;
 import com.charite.model.ChromosomeId;
 import com.charite.snv.model.SNV;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
+@XStreamAlias("Filter")
 public class ThousandGenomeFilter extends Filter<SNV, SNV> {
   private float threshold = 0;
+  
+  @XStreamOmitField
   @Autowired
   private ESPDao dao;
   

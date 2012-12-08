@@ -8,9 +8,13 @@ import com.charite.nsfp.dao.NSFPDao;
 import com.charite.nsfp.model.NSFP;
 import com.charite.nsfp.model.Variant;
 import com.charite.snv.model.SNV;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
+@XStreamAlias("Filter")
 public class PathogenicityFilter extends Filter<SNV, NSFP> {
 
+  @XStreamOmitField
   @Autowired
   private NSFPDao dao;
   

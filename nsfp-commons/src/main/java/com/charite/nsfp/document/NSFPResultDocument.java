@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.charite.filter.Filter;
 import com.charite.nsfp.model.NSFP;
 import com.charite.snv.model.SNV;
+import com.charite.util.Pair;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
@@ -17,11 +18,12 @@ public final class NSFPResultDocument {
   @XStreamOmitField
   private final Lock lock = new ReentrantLock();
 
-  private List<String> samples                        = null;
-  private List<Filter<SNV, SNV>> snvFilters           = null;
-  private List<Filter<SNV, NSFP>> nsfpFilters         = null;
-  private List<Filter<NSFP, NSFP>> inheritanceFilters = null;
-  private final List<NSFP> NSFPs                      = new ArrayList<NSFP>();
+  private String vcfFile                                                = "";
+  private List<String> samples                                          = null;
+  private List<Filter<SNV, SNV>> snvFilters                             = null;
+  private List<Filter<SNV, NSFP>> nsfpFilters                           = null;
+  private List<Filter<NSFP, Pair<Boolean, Boolean>>> inheritanceFilters = null;
+  private final List<NSFP> NSFPs                                        = new ArrayList<NSFP>();
 
   public void addNSFPS(final Collection<NSFP> nsfps) {
     lock.lock();
@@ -103,7 +105,7 @@ public final class NSFPResultDocument {
     }
   }
 
-  public List<Filter<NSFP, NSFP>> getInheritanceFilters() {
+  public List<Filter<NSFP, Pair<Boolean, Boolean>>> getInheritanceFilters() {
     lock.lock();
     try {
       return inheritanceFilters;
@@ -113,7 +115,7 @@ public final class NSFPResultDocument {
     }
   }
 
-  public void setInheritanceFilters(List<Filter<NSFP, NSFP>> inheritanceFilters) {
+  public void setInheritanceFilters(List<Filter<NSFP, Pair<Boolean, Boolean>>> inheritanceFilters) {
     lock.lock();
     try {
       this.inheritanceFilters = inheritanceFilters;
@@ -121,5 +123,13 @@ public final class NSFPResultDocument {
     finally {
       lock.unlock();
     }
+  }
+
+  public String getVcfFile() {
+    return vcfFile;
+  }
+
+  public void setVcfFile(String vcfFile) {
+    this.vcfFile = vcfFile;
   }
 }

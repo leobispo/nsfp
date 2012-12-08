@@ -36,7 +36,14 @@
     <property name="filters">
       <ref bean="InheritanceFilters" />
     </property>
+    <property name="snvFilters">
+      <ref bean="SNVFilters" />
+    </property>
+    <property name="nsfpFilters">
+      <ref bean="NSFPFilters" />
+    </property>
   </bean>
+
   <bean id="NSFPDatabase" class="com.charite.thirdpartydb.ThirdPartyDatabase">
     <constructor-arg>
       <value>1</value>

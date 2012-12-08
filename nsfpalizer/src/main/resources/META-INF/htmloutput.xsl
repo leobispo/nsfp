@@ -10,6 +10,30 @@
         TG=0.05 (or similar) for Thousand Genomes frequency filter, 
         and Q=30 for minimum genotype quality of 30 (or similar).</p>
         <p>Brought to you by AG Robinson, be sure to visit our <a href="http://compbio.charite.de">homepage</a>.</p>
+        <p>Filtering methods used:</p>
+        <ul>
+          <xsl:if test="/NSFPResult/snvFilters"> 
+            <xsl:for-each select="NSFPResult/snvFilters/*">
+              <li><xsl:value-of select="filterName"/>: <xsl:value-of select="description"/></li>
+            </xsl:for-each>
+          </xsl:if>
+          <xsl:if test="/NSFPResult/nsfpFilters"> 
+            <xsl:for-each select="NSFPResult/nsfpFilters/*">
+              <li><xsl:value-of select="filterName"/>: <xsl:value-of select="description"/></li>
+            </xsl:for-each>
+          </xsl:if>
+          <xsl:if test="/NSFPResult/inheritanceFilters"> 
+            <xsl:for-each select="NSFPResult/inheritanceFilters/*">
+              <li><xsl:value-of select="filterName"/>: <xsl:value-of select="description"/></li>
+            </xsl:for-each>
+          </xsl:if>
+        </ul>
+        <p>VCF File: <xsl:value-of select="NSFPResult/vcfFile"/>.</p>
+        <xsl:choose>
+          <xsl:when test="count(/NSFPResult/inheritanceFilters/*)  &gt; 1">
+            <p>Warning: Multiple inheritance filters were set. Not a valid analysis!</p>
+          </xsl:when>
+        </xsl:choose>
         <xsl:if test="/NSFPResult/samples">
           <p>Samples:</p>
           <ul> 
@@ -18,29 +42,37 @@
           </xsl:for-each>
           </ul>
         </xsl:if>
-        <xsl:if test="/NSFPResult/snvFilters">"
-          <ul> 
-          <xsl:for-each select="NSFPResult/snvFilters/*">
-              <li>Total SNVs before <b><xsl:value-of select="filterName"/></b> filtering <xsl:value-of select="elementsProcessed"/></li>
-              <li>Total SNVs after <b><xsl:value-of select="filterName"/></b> filtering <xsl:value-of select="elementsFiltered"/></li>
-          </xsl:for-each>
-          </ul> 
-        </xsl:if>
-        <table>
-          <tr>
-            <xsl:for-each select="NSFPResult/NSFPs/NSFP[1]/*">
-              <th><xsl:value-of select="name(.)"/></th>
+        <ul>
+          <xsl:if test="/NSFPResult/snvFilters">
+            <li>Total SNVs before filtering <xsl:value-of select="NSFPResult/snvFilters/Filter[1]/elementsProcessed"/></li>
+            <xsl:for-each select="NSFPResult/snvFilters/*">
+              <li>Total SNVs after <b><xsl:value-of select="filterName"/></b> filtering <xsl:value-of select="elementsDiff"/></li>
             </xsl:for-each>
-          </tr>
-          <xsl:for-each select="NSFPResult/NSFPs/NSFP">
-          <tr>
-            <xsl:for-each select="*">
-              <th><xsl:value-of select="."/></th>
+          </xsl:if>
+          <xsl:if test="/NSFPResult/nsfpFilters">
+            <xsl:for-each select="NSFPResult/nsfpFilters/*">
+              <li>Total SNVs after <b><xsl:value-of select="filterName"/></b> filtering <xsl:value-of select="elementsDiff"/></li>
             </xsl:for-each>
-          </tr>
+          </xsl:if>
+        </ul>
+        <table border="1" cellpaddding="1" cellspacing="0">
+          <tbody align="center" style="font-family:verdana;color:black;background-color:#00FFFF">
+            <tr>
+              <xsl:for-each select="NSFPResult/NSFPs/NSFP[1]/*">
+                <th><xsl:value-of select="name(.)"/></th>
+              </xsl:for-each>
+            </tr>
+            <xsl:for-each select="NSFPResult/NSFPs/NSFP">
+            <tr>
+              <xsl:for-each select="*">
+                <th><xsl:value-of select="."/></th>
+              </xsl:for-each>
+            </tr>
           </xsl:for-each>
+          </tbody>
         </table>
       </body>
     </html>
   </xsl:template>
 </xsl:stylesheet>
+

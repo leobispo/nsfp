@@ -2,6 +2,9 @@ package com.charite.filter;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+
+@XStreamAlias("Filter")
 public abstract class Filter<IN, OUT> {
   @SuppressWarnings("unused")
   private final String filterName            = getFilterName();
@@ -9,6 +12,7 @@ public abstract class Filter<IN, OUT> {
   private final String description           = getDescription();
   private final AtomicLong elementsProcessed = new AtomicLong();
   private final AtomicLong  elementsFiltered = new AtomicLong();
+  private long  elementsDiff                 = 0;
   private int position                       = 0;
   
   public abstract String getFilterName();
@@ -30,6 +34,11 @@ public abstract class Filter<IN, OUT> {
   public final int getPosition() {
     return position;
   }
+  
+  public final long getElementsDiff() {
+    return elementsDiff;
+  }
+  
   final OUT processFilter(final IN in, Object... arguments) {
     elementsProcessed.incrementAndGet();
     OUT out = filter(in, arguments);
@@ -37,6 +46,7 @@ public abstract class Filter<IN, OUT> {
     if (out == null)
       elementsFiltered.incrementAndGet();
     
+    elementsDiff = elementsProcessed.get() - elementsFiltered.get();
     return out;
   }
   

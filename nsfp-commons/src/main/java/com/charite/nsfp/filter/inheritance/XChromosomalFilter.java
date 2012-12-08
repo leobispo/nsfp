@@ -3,7 +3,9 @@ package com.charite.nsfp.filter.inheritance;
 import com.charite.filter.Filter;
 import com.charite.nsfp.model.NSFP;
 import com.charite.util.Pair;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+@XStreamAlias("Filter")
 public class XChromosomalFilter extends Filter<NSFP, Pair<Boolean, Boolean>> {
 
   @Override

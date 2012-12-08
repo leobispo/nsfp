@@ -9,13 +9,18 @@ import com.charite.nsfp.dao.NSFPDao;
 import com.charite.nsfp.model.NSFP;
 import com.charite.nsfp.model.Variant;
 import com.charite.snv.model.SNV;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
+@XStreamAlias("Filter")
 public class ThousandGenomeFilter extends Filter<SNV, NSFP> {
   private float threshold = 0;
 
+  @XStreamOmitField
   @Autowired
   private ESPDao dao;
 
+  @XStreamOmitField
   @Autowired
   private NSFPDao nDao;
   

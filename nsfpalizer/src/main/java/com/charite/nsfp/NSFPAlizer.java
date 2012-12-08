@@ -165,7 +165,7 @@ final class NSFPAlizerDownloadListener implements ProgressListener {
  *
  */
 public class NSFPAlizer {
-  private enum FilterParserError { Success, DuplicateEntry, FilterNotFound, InvalidParameter, MultipleArguments };
+  private enum FilterParserError { Success, DuplicateEntry, FilterNotFound, InvalidParameter };
   
   /**
    * Method Entry point.
@@ -318,9 +318,13 @@ public class NSFPAlizer {
       }
       
       if (inheritanceFilter != null) {
-        if (inheritanceFilters.size() == 1)
-          return FilterParserError.MultipleArguments;
+        if (inheritanceFilters.contains(inheritanceFilter))
+          return FilterParserError.DuplicateEntry;
         
+        if (tokens.length > 1 && !inheritanceFilter.setParameter(tokens[1]))
+          return FilterParserError.InvalidParameter;
+        
+        inheritanceFilter.setPosition((new IndexSet<String>()).getIndex(inheritanceFilterMap.keySet(), tokens[0]));
         inheritanceFilters.add(inheritanceFilter);
       }
     }
@@ -335,6 +339,13 @@ public class NSFPAlizer {
     Collections.sort(nsfpFilters, new Comparator<Filter<SNV, NSFP>>() {
       @Override
       public int compare(Filter<SNV, NSFP> o1, Filter<SNV, NSFP> o2) {
+        return o1.getPosition() - o2.getPosition();
+      }
+    });
+    
+    Collections.sort(inheritanceFilters, new Comparator<Filter<NSFP, Pair<Boolean, Boolean>>>() {
+      @Override
+      public int compare(Filter<NSFP, Pair<Boolean, Boolean>> o1, Filter<NSFP, Pair<Boolean, Boolean>> o2) {
         return o1.getPosition() - o2.getPosition();
       }
     });
